@@ -23,6 +23,13 @@ func computeAcceptKey(challengeKey string) string {
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
+func computeAcceptKeyBytes(challengeKey []byte) string {
+	h := sha1.New()
+	h.Write(challengeKey)
+	h.Write(keyGUID)
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
+
 func generateChallengeKey() (string, error) {
 	p := make([]byte, 16)
 	if _, err := io.ReadFull(rand.Reader, p); err != nil {
@@ -95,7 +102,8 @@ func nextToken(s string) (token, rest string) {
 
 func nextTokenOrQuoted(s string) (value string, rest string) {
 	if !strings.HasPrefix(s, "\"") {
-		return nextToken(s)
+		token, rest := nextToken(s)
+		return token, rest
 	}
 	s = s[1:]
 	for i := 0; i < len(s); i++ {
@@ -153,26 +161,34 @@ func equalASCIIFold(s, t string) bool {
 
 // tokenListContainsValue returns true if the 1#token header with the given
 // name contains a token equal to value with ASCII case folding.
+func tokenContainsValue(s string, value string) bool {
+	for {
+		var t string
+		t, s = nextToken(skipSpace(s))
+		if t == "" {
+			return false
+		}
+		s = skipSpace(s)
+		if s != "" && s[0] != ',' {
+			return false
+		}
+		if equalASCIIFold(t, value) {
+			return true
+		}
+		if s == "" {
+			return false
+		}
+
+		s = s[1:]
+	}
+}
+
+// tokenListContainsValue returns true if the 1#token header with the given
+// name contains token.
 func tokenListContainsValue(header http.Header, name string, value string) bool {
-headers:
 	for _, s := range header[name] {
-		for {
-			var t string
-			t, s = nextToken(skipSpace(s))
-			if t == "" {
-				continue headers
-			}
-			s = skipSpace(s)
-			if s != "" && s[0] != ',' {
-				continue headers
-			}
-			if equalASCIIFold(t, value) {
-				return true
-			}
-			if s == "" {
-				continue headers
-			}
-			s = s[1:]
+		if tokenContainsValue(s, value) {
+			return true
 		}
 	}
 	return false
