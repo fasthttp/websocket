@@ -11,33 +11,28 @@ import (
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
 
-func wsHandler(ws *websocket.Conn) {
-	defer ws.Close()
-	for {
-		mt, message, err := ws.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
+var upgrader = websocket.FastHTTPUpgrader{}
+
+func echoView(ctx *fasthttp.RequestCtx) {
+	upgrader.Upgrade(ctx, func(ws *websocket.Conn) {
+		defer ws.Close()
+		for {
+			mt, message, err := ws.ReadMessage()
+			if err != nil {
+				log.Println("read:", err)
+				break
+			}
+			log.Printf("recv: %s", message)
+			err = ws.WriteMessage(mt, message)
+			if err != nil {
+				log.Println("write:", err)
+				break
+			}
 		}
-		log.Printf("recv: %s", message)
-		err = ws.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-	}
+	})
 }
 
-var upgrader = websocket.FastHTTPUpgrader{
-	Handler:           wsHandler,
-	EnableCompression: true,
-}
-
-func echo(ctx *fasthttp.RequestCtx) {
-	upgrader.Upgrade(ctx)
-}
-
-func home(ctx *fasthttp.RequestCtx) {
+func homeView(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("text/html")
 	homeTemplate.Execute(ctx, "ws://"+string(ctx.Host())+"/echo")
 }
@@ -49,9 +44,9 @@ func main() {
 	requestHandler := func(ctx *fasthttp.RequestCtx) {
 		switch string(ctx.Path()) {
 		case "/echo":
-			echo(ctx)
+			echoView(ctx)
 		case "/":
-			home(ctx)
+			homeView(ctx)
 		default:
 			ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		}

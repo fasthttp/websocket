@@ -15,6 +15,10 @@ import (
 	"github.com/erikdubbelboer/fasthttp"
 )
 
+// FastHTTPHandler receives a websocket connection after the handshake has been
+// completed. This must be provided.
+type FastHTTPHandler func(*Conn)
+
 // FastHTTPUpgrader specifies parameters for upgrading an HTTP connection to a
 // WebSocket connection.
 type FastHTTPUpgrader struct {
@@ -51,10 +55,6 @@ type FastHTTPUpgrader struct {
 	// guarantee that compression will be supported. Currently only "no context
 	// takeover" modes are supported.
 	EnableCompression bool
-
-	// Handler receives a websocket connection after the handshake has been
-	// completed. This must be provided.
-	Handler func(*Conn)
 }
 
 func (u *FastHTTPUpgrader) returnError(ctx *fasthttp.RequestCtx, status int, reason string) (*Conn, error) {
@@ -93,7 +93,7 @@ func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) string {
 //
 // If the upgrade fails, then Upgrade replies to the client with an HTTP error
 // response.
-func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx) {
+func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHandler) {
 	const badHandshake = "websocket: the client is not using the websocket protocol: "
 
 	if !ctx.IsGet() {
@@ -180,7 +180,7 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx) {
 			netConn.SetWriteDeadline(time.Now().Add(u.HandshakeTimeout))
 		}
 
-		u.Handler(c)
+		handler(c)
 	})
 }
 
