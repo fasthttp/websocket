@@ -9,10 +9,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/erikdubbelboer/fasthttp"
+	"github.com/valyala/bytebufferpool"
 )
 
 // FastHTTPHandler receives a websocket connection after the handshake has been
@@ -57,7 +57,7 @@ type FastHTTPUpgrader struct {
 	EnableCompression bool
 }
 
-func (u *FastHTTPUpgrader) returnError(ctx *fasthttp.RequestCtx, status int, reason string) (*Conn, error) {
+func (u *FastHTTPUpgrader) responseError(ctx *fasthttp.RequestCtx, status int, reason string) {
 	err := HandshakeError{reason}
 	if u.Error != nil {
 		u.Error(ctx, status, err)
@@ -65,24 +65,27 @@ func (u *FastHTTPUpgrader) returnError(ctx *fasthttp.RequestCtx, status int, rea
 		ctx.Response.Header.Set("Sec-Websocket-Version", "13")
 		ctx.Error(http.StatusText(status), status)
 	}
-	return nil, err
 }
 
-func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) string {
+func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) []byte {
+	value := bytebufferpool.Get()
+	defer bytebufferpool.Put(value)
+
 	if u.Subprotocols != nil {
-		clientProtocols := FastHTTPSubprotocols(ctx)
+		clientProtocols := parseDataHeader(ctx.Request.Header.Peek("Sec-Websocket-Protocol"))
 		for _, serverProtocol := range u.Subprotocols {
 			for _, clientProtocol := range clientProtocols {
-				if clientProtocol == serverProtocol {
+				value.B = append(value.B[:0], serverProtocol...)
+				if bytes.Equal(clientProtocol, value.B) {
 					return clientProtocol
 				}
 			}
 		}
 	} else if ctx.Response.Header.Len() > 0 {
-		return string(ctx.Response.Header.Peek("Sec-Websocket-Protocol"))
+		return ctx.Response.Header.Peek("Sec-Websocket-Protocol")
 	}
 
-	return ""
+	return nil
 }
 
 // Upgrade upgrades the HTTP server connection to the WebSocket protocol.
@@ -95,29 +98,34 @@ func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) string {
 // response.
 func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHandler) {
 	const badHandshake = "websocket: the client is not using the websocket protocol: "
+	value := bytebufferpool.Get()
+	defer bytebufferpool.Put(value)
 
 	if !ctx.IsGet() {
-		u.returnError(ctx, fasthttp.StatusMethodNotAllowed, badHandshake+"request method is not GET")
+		u.responseError(ctx, fasthttp.StatusMethodNotAllowed, badHandshake+"request method is not GET")
 		return
 	}
 
-	if !fastHTTPHeaderContainsValue(ctx, "Connection", "upgrade") {
-		u.returnError(ctx, fasthttp.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
+	value.B = append(value.B[:0], "Upgrade"...)
+	if !bytes.Equal(ctx.Request.Header.Peek("Connection"), value.B) {
+		u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
 		return
 	}
 
-	if !fastHTTPHeaderContainsValue(ctx, "Upgrade", "websocket") {
-		u.returnError(ctx, fasthttp.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
+	value.B = append(value.B[:0], "websocket"...)
+	if !bytes.Equal(ctx.Request.Header.Peek("Upgrade"), value.B) {
+		u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
 		return
 	}
 
-	if !fastHTTPHeaderContainsValue(ctx, "Sec-Websocket-Version", "13") {
-		u.returnError(ctx, fasthttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
+	value.B = append(value.B[:0], "13"...)
+	if !bytes.Equal(ctx.Request.Header.Peek("Sec-Websocket-Version"), value.B) {
+		u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 		return
 	}
 
 	if len(ctx.Response.Header.Peek("Sec-Websocket-Extensions")) > 0 {
-		u.returnError(ctx, fasthttp.StatusInternalServerError, "websocket: application specific 'Sec-WebSocket-Extensions' headers are unsupported")
+		u.responseError(ctx, fasthttp.StatusInternalServerError, "websocket: application specific 'Sec-WebSocket-Extensions' headers are unsupported")
 		return
 	}
 
@@ -126,24 +134,25 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		checkOrigin = fastHTTPcheckSameOrigin
 	}
 	if !checkOrigin(ctx) {
-		u.returnError(ctx, fasthttp.StatusForbidden, "websocket: request origin not allowed by FastHTTPUpgrader.CheckOrigin")
+		u.responseError(ctx, fasthttp.StatusForbidden, "websocket: request origin not allowed by FastHTTPUpgrader.CheckOrigin")
 		return
 	}
 
 	challengeKey := ctx.Request.Header.Peek("Sec-Websocket-Key")
 	if len(challengeKey) == 0 {
-		u.returnError(ctx, fasthttp.StatusBadRequest, "websocket: not a websocket handshake: `Sec-WebSocket-Key' header is missing or blank")
+		u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: not a websocket handshake: `Sec-WebSocket-Key' header is missing or blank")
 		return
 	}
 
 	subprotocol := u.selectSubprotocol(ctx)
-	extensions := FastHTTPExtensions(ctx)
+	extensions := parseDataHeader(ctx.Request.Header.Peek("Sec-WebSocket-Extensions"))
 
 	// Negotiate PMCE
 	var compress bool
+	value.B = append(value.B[:0], "permessage-deflate"...)
 	if u.EnableCompression {
 		for _, ext := range extensions {
-			if ext != "permessage-deflate" {
+			if !bytes.Equal(ext, value.B) {
 				continue
 			}
 			compress = true
@@ -158,14 +167,14 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 	if compress {
 		ctx.Response.Header.Set("Sec-WebSocket-Extensions", "permessage-deflate; server_no_context_takeover; client_no_context_takeover")
 	}
-	if subprotocol != "" {
-		ctx.Response.Header.Set("Sec-WebSocket-Protocol", subprotocol)
+	if subprotocol != nil {
+		ctx.Response.Header.SetBytesV("Sec-WebSocket-Protocol", subprotocol)
 	}
 
 	ctx.Hijack(func(netConn net.Conn) {
 		c := newConn(netConn, true, u.ReadBufferSize, u.WriteBufferSize)
-		if subprotocol != "" {
-			c.subprotocol = subprotocol
+		if subprotocol != nil {
+			c.subprotocol = string(subprotocol)
 		}
 
 		if compress {
@@ -184,40 +193,6 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 	})
 }
 
-// FastHTTPIsWebSocketUpgrade returns true if the client requested upgrade to the
-// WebSocket protocol.
-func FastHTTPIsWebSocketUpgrade(ctx *fasthttp.RequestCtx) bool {
-	return fastHTTPHeaderContainsValue(ctx, "Connection", "upgrade") && fastHTTPHeaderContainsValue(ctx, "Upgrade", "websocket")
-}
-
-// FastHTTPSubprotocols returns the subprotocols requested by the client in the
-// Sec-Websocket-Protocol header.
-func FastHTTPSubprotocols(ctx *fasthttp.RequestCtx) []string {
-	h := strings.TrimSpace(string(ctx.Request.Header.Peek("Sec-Websocket-Protocol")))
-	if h == "" {
-		return nil
-	}
-	protocols := strings.Split(h, ",")
-	for i := range protocols {
-		protocols[i] = strings.TrimSpace(protocols[i])
-	}
-	return protocols
-}
-
-// FastHTTPExtensions returns the subprotocols requested by the client in the
-// Sec-WebSocket-Extensions header.
-func FastHTTPExtensions(ctx *fasthttp.RequestCtx) []string {
-	h := strings.TrimSpace(string(ctx.Request.Header.Peek("Sec-WebSocket-Extensions")))
-	if h == "" {
-		return nil
-	}
-	extensions := strings.Split(h, ";")
-	for i := range extensions {
-		extensions[i] = strings.TrimSpace(extensions[i])
-	}
-	return extensions
-}
-
 // fastHTTPcheckSameOrigin returns true if the origin is not set or is equal to the request host.
 func fastHTTPcheckSameOrigin(ctx *fasthttp.RequestCtx) bool {
 	origin := ctx.Request.Header.Peek("Origin")
@@ -231,21 +206,9 @@ func fastHTTPcheckSameOrigin(ctx *fasthttp.RequestCtx) bool {
 	return equalASCIIFold(u.Host, string(ctx.Host()))
 }
 
-// fastHTTPHeaderContainsValue check if match any header
-func fastHTTPHeaderContainsValue(ctx *fasthttp.RequestCtx, header string, value string) bool {
-	result := false
-	matchKey := []byte(header)
-
-	ctx.Request.Header.VisitAll(func(key []byte, val []byte) {
-		if !result {
-			if bytes.Equal(key, matchKey) {
-				headerValue := string(val)
-				if tokenContainsValue(headerValue, value) {
-					result = true
-				}
-			}
-		}
-	})
-
-	return result
+// FastHTTPIsWebSocketUpgrade returns true if the client requested upgrade to the
+// WebSocket protocol.
+func FastHTTPIsWebSocketUpgrade(ctx *fasthttp.RequestCtx) bool {
+	return bytes.Equal(ctx.Request.Header.Peek("Connection"), []byte("Upgrade")) &&
+		bytes.Equal(ctx.Request.Header.Peek("Upgrade"), []byte("websocket"))
 }

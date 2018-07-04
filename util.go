@@ -5,6 +5,7 @@
 package websocket
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/base64"
@@ -250,4 +251,18 @@ headers:
 		}
 	}
 	return result
+}
+
+// parseDataHeader returns a list with values if header value is separated with commas
+func parseDataHeader(headerValue []byte) [][]byte {
+	h := bytes.TrimSpace(headerValue)
+	if bytes.Equal(h, []byte("")) {
+		return nil
+	}
+
+	protocols := bytes.Split(h, []byte(","))
+	for i := range protocols {
+		protocols[i] = bytes.TrimSpace(protocols[i])
+	}
+	return protocols
 }
