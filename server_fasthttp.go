@@ -7,7 +7,6 @@ package websocket
 import (
 	"bytes"
 	"net"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -63,7 +62,7 @@ func (u *FastHTTPUpgrader) responseError(ctx *fasthttp.RequestCtx, status int, r
 		u.Error(ctx, status, err)
 	} else {
 		ctx.Response.Header.Set("Sec-Websocket-Version", "13")
-		ctx.Error(http.StatusText(status), status)
+		ctx.Error(fasthttp.StatusMessage(status), status)
 	}
 }
 
