@@ -10,175 +10,194 @@ import (
 	"flag"
 	"io"
 	"log"
-	"net/http"
 	"time"
 	"unicode/utf8"
 
+	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/websocket"
 )
 
-var upgrader = websocket.Upgrader{
+var upgrader = websocket.FastHTTPUpgrader{
 	ReadBufferSize:    4096,
 	WriteBufferSize:   4096,
 	EnableCompression: true,
-	CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin: func(ctx *fasthttp.RequestCtx) bool {
 		return true
 	},
 }
 
 // echoCopy echoes messages from the client using io.Copy.
-func echoCopy(w http.ResponseWriter, r *http.Request, writerOnly bool) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("Upgrade:", err)
-		return
-	}
-	defer conn.Close()
-	for {
-		mt, r, err := conn.NextReader()
-		if err != nil {
-			if err != io.EOF {
-				log.Println("NextReader:", err)
-			}
-			return
-		}
-		if mt == websocket.TextMessage {
-			r = &validator{r: r}
-		}
-		w, err := conn.NextWriter(mt)
-		if err != nil {
-			log.Println("NextWriter:", err)
-			return
-		}
-		if mt == websocket.TextMessage {
-			r = &validator{r: r}
-		}
-		if writerOnly {
-			_, err = io.Copy(struct{ io.Writer }{w}, r)
-		} else {
-			_, err = io.Copy(w, r)
-		}
-		if err != nil {
-			if err == errInvalidUTF8 {
-				conn.WriteControl(websocket.CloseMessage,
-					websocket.FormatCloseMessage(websocket.CloseInvalidFramePayloadData, ""),
-					time.Time{})
-			}
-			log.Println("Copy:", err)
-			return
-		}
-		err = w.Close()
-		if err != nil {
-			log.Println("Close:", err)
-			return
-		}
-	}
-}
-
-func echoCopyWriterOnly(w http.ResponseWriter, r *http.Request) {
-	echoCopy(w, r, true)
-}
-
-func echoCopyFull(w http.ResponseWriter, r *http.Request) {
-	echoCopy(w, r, false)
-}
-
-// echoReadAll echoes messages from the client by reading the entire message
-// with ioutil.ReadAll.
-func echoReadAll(w http.ResponseWriter, r *http.Request, writeMessage, writePrepared bool) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("Upgrade:", err)
-		return
-	}
-	defer conn.Close()
-	for {
-		mt, b, err := conn.ReadMessage()
-		if err != nil {
-			if err != io.EOF {
-				log.Println("NextReader:", err)
-			}
-			return
-		}
-		if mt == websocket.TextMessage {
-			if !utf8.Valid(b) {
-				conn.WriteControl(websocket.CloseMessage,
-					websocket.FormatCloseMessage(websocket.CloseInvalidFramePayloadData, ""),
-					time.Time{})
-				log.Println("ReadAll: invalid utf8")
-			}
-		}
-		if writeMessage {
-			if !writePrepared {
-				err = conn.WriteMessage(mt, b)
-				if err != nil {
-					log.Println("WriteMessage:", err)
+func echoCopy(ctx *fasthttp.RequestCtx, writerOnly bool) {
+	err := upgrader.Upgrade(ctx, func(conn *websocket.Conn) {
+		defer conn.Close()
+		for {
+			mt, r, err := conn.NextReader()
+			if err != nil {
+				if err != io.EOF {
+					log.Println("NextReader:", err)
 				}
-			} else {
-				pm, err := websocket.NewPreparedMessage(mt, b)
-				if err != nil {
-					log.Println("NewPreparedMessage:", err)
-					return
-				}
-				err = conn.WritePreparedMessage(pm)
-				if err != nil {
-					log.Println("WritePreparedMessage:", err)
-				}
+				return
 			}
-		} else {
+			if mt == websocket.TextMessage {
+				r = &validator{r: r}
+			}
 			w, err := conn.NextWriter(mt)
 			if err != nil {
 				log.Println("NextWriter:", err)
 				return
 			}
-			if _, err := w.Write(b); err != nil {
-				log.Println("Writer:", err)
+			if mt == websocket.TextMessage {
+				r = &validator{r: r}
+			}
+			if writerOnly {
+				_, err = io.Copy(struct{ io.Writer }{w}, r)
+			} else {
+				_, err = io.Copy(w, r)
+			}
+			if err != nil {
+				if err == errInvalidUTF8 {
+					conn.WriteControl(websocket.CloseMessage,
+						websocket.FormatCloseMessage(websocket.CloseInvalidFramePayloadData, ""),
+						time.Time{})
+				}
+				log.Println("Copy:", err)
 				return
 			}
-			if err := w.Close(); err != nil {
+			err = w.Close()
+			if err != nil {
 				log.Println("Close:", err)
 				return
 			}
 		}
-	}
-}
+	})
 
-func echoReadAllWriter(w http.ResponseWriter, r *http.Request) {
-	echoReadAll(w, r, false, false)
-}
-
-func echoReadAllWriteMessage(w http.ResponseWriter, r *http.Request) {
-	echoReadAll(w, r, true, false)
-}
-
-func echoReadAllWritePreparedMessage(w http.ResponseWriter, r *http.Request) {
-	echoReadAll(w, r, true, true)
-}
-
-func serveHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.Error(w, "Not found.", http.StatusNotFound)
+	if err != nil {
+		log.Println("Upgrade:", err)
 		return
 	}
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+func echoCopyWriterOnly(ctx *fasthttp.RequestCtx) {
+	echoCopy(ctx, true)
+}
+
+func echoCopyFull(ctx *fasthttp.RequestCtx) {
+	echoCopy(ctx, false)
+}
+
+// echoReadAll echoes messages from the client by reading the entire message
+// with ioutil.ReadAll.
+func echoReadAll(ctx *fasthttp.RequestCtx, writeMessage, writePrepared bool) {
+	err := upgrader.Upgrade(ctx, func(conn *websocket.Conn) {
+		defer conn.Close()
+		for {
+			mt, b, err := conn.ReadMessage()
+			if err != nil {
+				if err != io.EOF {
+					log.Println("NextReader:", err)
+				}
+				return
+			}
+			if mt == websocket.TextMessage {
+				if !utf8.Valid(b) {
+					conn.WriteControl(websocket.CloseMessage,
+						websocket.FormatCloseMessage(websocket.CloseInvalidFramePayloadData, ""),
+						time.Time{})
+					log.Println("ReadAll: invalid utf8")
+				}
+			}
+			if writeMessage {
+				if !writePrepared {
+					err = conn.WriteMessage(mt, b)
+					if err != nil {
+						log.Println("WriteMessage:", err)
+					}
+				} else {
+					pm, err := websocket.NewPreparedMessage(mt, b)
+					if err != nil {
+						log.Println("NewPreparedMessage:", err)
+						return
+					}
+					err = conn.WritePreparedMessage(pm)
+					if err != nil {
+						log.Println("WritePreparedMessage:", err)
+					}
+				}
+			} else {
+				w, err := conn.NextWriter(mt)
+				if err != nil {
+					log.Println("NextWriter:", err)
+					return
+				}
+				if _, err := w.Write(b); err != nil {
+					log.Println("Writer:", err)
+					return
+				}
+				if err := w.Close(); err != nil {
+					log.Println("Close:", err)
+					return
+				}
+			}
+		}
+	})
+
+	if err != nil {
+		log.Println("Upgrade:", err)
 		return
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	io.WriteString(w, "<html><body>Echo Server</body></html>")
+}
+
+func echoReadAllWriter(ctx *fasthttp.RequestCtx) {
+	echoReadAll(ctx, false, false)
+}
+
+func echoReadAllWriteMessage(ctx *fasthttp.RequestCtx) {
+	echoReadAll(ctx, true, false)
+}
+
+func echoReadAllWritePreparedMessage(ctx *fasthttp.RequestCtx) {
+	echoReadAll(ctx, true, true)
+}
+
+func serveHome(ctx *fasthttp.RequestCtx) {
+	if !ctx.IsGet() {
+		ctx.Error("Method not allowed", fasthttp.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx.SetContentType("text/html; charset=utf-8")
+	io.WriteString(ctx, "<html><body>Echo Server</body></html>")
 }
 
 var addr = flag.String("addr", ":9000", "http service address")
 
 func main() {
 	flag.Parse()
-	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/c", echoCopyWriterOnly)
-	http.HandleFunc("/f", echoCopyFull)
-	http.HandleFunc("/r", echoReadAllWriter)
-	http.HandleFunc("/m", echoReadAllWriteMessage)
-	http.HandleFunc("/p", echoReadAllWritePreparedMessage)
-	err := http.ListenAndServe(*addr, nil)
+
+	requestHandler := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/":
+			serveHome(ctx)
+		case "/c":
+			echoCopyWriterOnly(ctx)
+		case "/f":
+			echoCopyFull(ctx)
+		case "/r":
+			echoReadAllWriter(ctx)
+		case "/m":
+			echoReadAllWriteMessage(ctx)
+		case "/p":
+			echoReadAllWritePreparedMessage(ctx)
+		default:
+			ctx.Error("Unsupported path", fasthttp.StatusNotFound)
+		}
+	}
+	server := fasthttp.Server{
+		Name:    "AutobahnExample",
+		Handler: requestHandler,
+	}
+
+	err := server.ListenAndServe(*addr)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
