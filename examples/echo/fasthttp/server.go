@@ -32,7 +32,7 @@ func echoView(ctx *fasthttp.RequestCtx) {
 	})
 
 	if err != nil {
-		if _, ok := err.(websocket.HandshakeError); !ok {
+		if _, ok := err.(websocket.HandshakeError); ok {
 			log.Println(err)
 		}
 		return
