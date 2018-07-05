@@ -56,7 +56,7 @@ type FastHTTPUpgrader struct {
 	EnableCompression bool
 }
 
-func (u *FastHTTPUpgrader) responseError(ctx *fasthttp.RequestCtx, status int, reason string) {
+func (u *FastHTTPUpgrader) responseError(ctx *fasthttp.RequestCtx, status int, reason string) error {
 	err := HandshakeError{reason}
 	if u.Error != nil {
 		u.Error(ctx, status, err)
@@ -64,6 +64,8 @@ func (u *FastHTTPUpgrader) responseError(ctx *fasthttp.RequestCtx, status int, r
 		ctx.Response.Header.Set("Sec-Websocket-Version", "13")
 		ctx.Error(fasthttp.StatusMessage(status), status)
 	}
+
+	return err
 }
 
 func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) []byte {
@@ -95,37 +97,32 @@ func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) []byte {
 //
 // If the upgrade fails, then Upgrade replies to the client with an HTTP error
 // response.
-func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHandler) {
+func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHandler) error {
 	const badHandshake = "websocket: the client is not using the websocket protocol: "
 	value := bytebufferpool.Get()
 	defer bytebufferpool.Put(value)
 
 	if !ctx.IsGet() {
-		u.responseError(ctx, fasthttp.StatusMethodNotAllowed, badHandshake+"request method is not GET")
-		return
+		return u.responseError(ctx, fasthttp.StatusMethodNotAllowed, badHandshake+"request method is not GET")
 	}
 
 	value.B = append(value.B[:0], "Upgrade"...)
 	if !bytes.Equal(ctx.Request.Header.Peek("Connection"), value.B) {
-		u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
-		return
+		return u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
 	}
 
 	value.B = append(value.B[:0], "websocket"...)
 	if !bytes.Equal(ctx.Request.Header.Peek("Upgrade"), value.B) {
-		u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
-		return
+		return u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
 	}
 
 	value.B = append(value.B[:0], "13"...)
 	if !bytes.Equal(ctx.Request.Header.Peek("Sec-Websocket-Version"), value.B) {
-		u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
-		return
+		return u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 	}
 
 	if len(ctx.Response.Header.Peek("Sec-Websocket-Extensions")) > 0 {
-		u.responseError(ctx, fasthttp.StatusInternalServerError, "websocket: application specific 'Sec-WebSocket-Extensions' headers are unsupported")
-		return
+		return u.responseError(ctx, fasthttp.StatusInternalServerError, "websocket: application specific 'Sec-WebSocket-Extensions' headers are unsupported")
 	}
 
 	checkOrigin := u.CheckOrigin
@@ -133,14 +130,12 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		checkOrigin = fastHTTPcheckSameOrigin
 	}
 	if !checkOrigin(ctx) {
-		u.responseError(ctx, fasthttp.StatusForbidden, "websocket: request origin not allowed by FastHTTPUpgrader.CheckOrigin")
-		return
+		return u.responseError(ctx, fasthttp.StatusForbidden, "websocket: request origin not allowed by FastHTTPUpgrader.CheckOrigin")
 	}
 
 	challengeKey := ctx.Request.Header.Peek("Sec-Websocket-Key")
 	if len(challengeKey) == 0 {
-		u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: not a websocket handshake: `Sec-WebSocket-Key' header is missing or blank")
-		return
+		return u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: not a websocket handshake: `Sec-WebSocket-Key' header is missing or blank")
 	}
 
 	subprotocol := u.selectSubprotocol(ctx)
@@ -190,6 +185,8 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 
 		handler(c)
 	})
+
+	return nil
 }
 
 // fastHTTPcheckSameOrigin returns true if the origin is not set or is equal to the request host.
