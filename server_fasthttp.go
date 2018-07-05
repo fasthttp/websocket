@@ -107,17 +107,17 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 	}
 
 	value.B = append(value.B[:0], "Upgrade"...)
-	if !bytes.Equal(ctx.Request.Header.Peek("Connection"), value.B) {
+	if !bytes.Contains(ctx.Request.Header.Peek("Connection"), value.B) {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
 	}
 
 	value.B = append(value.B[:0], "websocket"...)
-	if !bytes.Equal(ctx.Request.Header.Peek("Upgrade"), value.B) {
+	if !bytes.Contains(ctx.Request.Header.Peek("Upgrade"), value.B) {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
 	}
 
 	value.B = append(value.B[:0], "13"...)
-	if !bytes.Equal(ctx.Request.Header.Peek("Sec-Websocket-Version"), value.B) {
+	if !bytes.Contains(ctx.Request.Header.Peek("Sec-Websocket-Version"), value.B) {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 	}
 

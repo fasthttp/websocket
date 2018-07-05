@@ -14,7 +14,7 @@ var addr = flag.String("addr", "localhost:8080", "http service address")
 var upgrader = websocket.FastHTTPUpgrader{}
 
 func echoView(ctx *fasthttp.RequestCtx) {
-	upgrader.Upgrade(ctx, func(ws *websocket.Conn) {
+	err := upgrader.Upgrade(ctx, func(ws *websocket.Conn) {
 		defer ws.Close()
 		for {
 			mt, message, err := ws.ReadMessage()
@@ -30,6 +30,13 @@ func echoView(ctx *fasthttp.RequestCtx) {
 			}
 		}
 	})
+
+	if err != nil {
+		if _, ok := err.(websocket.HandshakeError); !ok {
+			log.Println(err)
+		}
+		return
+	}
 }
 
 func homeView(ctx *fasthttp.RequestCtx) {
