@@ -111,7 +111,6 @@ func writer(ws *websocket.Conn, lastMod time.Time) {
 }
 
 func serveWs(ctx *fasthttp.RequestCtx) {
-	println("jajajaja")
 	err := upgrader.Upgrade(ctx, func(ws *websocket.Conn) {
 		var lastMod time.Time
 		if n, err := strconv.ParseInt(string(ctx.FormValue("lastMod")), 16, 64); err == nil {
