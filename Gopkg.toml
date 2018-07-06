@@ -2,6 +2,10 @@
   name = "github.com/erikdubbelboer/fasthttp"
   branch = "master"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/valyala/bytebufferpool"
+
 [[override]]
   name = "github.com/klauspost/compress"
   branch = "master"
