@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 	"unicode/utf8"
+	"unsafe"
 )
 
 var keyGUID = []byte("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
@@ -253,16 +254,21 @@ headers:
 	return result
 }
 
-// parseDataHeader returns a list with values if header value is separated with commas
+// parseDataHeader returns a list with values if header value is comma-separated
 func parseDataHeader(headerValue []byte) [][]byte {
 	h := bytes.TrimSpace(headerValue)
 	if bytes.Equal(h, []byte("")) {
 		return nil
 	}
 
-	protocols := bytes.Split(h, []byte(","))
-	for i := range protocols {
-		protocols[i] = bytes.TrimSpace(protocols[i])
+	values := bytes.Split(h, []byte(","))
+	for i := range values {
+		values[i] = bytes.TrimSpace(values[i])
 	}
-	return protocols
+	return values
+}
+
+// b2S convert bytes array to string without memory allocation
+func b2S(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
 }

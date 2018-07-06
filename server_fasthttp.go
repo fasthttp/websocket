@@ -89,6 +89,25 @@ func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) []byte {
 	return nil
 }
 
+func (u *FastHTTPUpgrader) isCompressionEnable(ctx *fasthttp.RequestCtx) bool {
+	value := bytebufferpool.Get()
+	defer bytebufferpool.Put(value)
+
+	extensions := parseDataHeader(ctx.Request.Header.Peek("Sec-WebSocket-Extensions"))
+
+	// Negotiate PMCE
+	value.B = append(value.B[:0], "permessage-deflate"...)
+	if u.EnableCompression {
+		for _, ext := range extensions {
+			if bytes.HasPrefix(ext, value.B) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 // Upgrade upgrades the HTTP server connection to the WebSocket protocol.
 //
 // The responseHeader is included in the response to the client's upgrade
@@ -139,20 +158,7 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 	}
 
 	subprotocol := u.selectSubprotocol(ctx)
-	extensions := parseDataHeader(ctx.Request.Header.Peek("Sec-WebSocket-Extensions"))
-
-	// Negotiate PMCE
-	var compress bool
-	value.B = append(value.B[:0], "permessage-deflate"...)
-	if u.EnableCompression {
-		for _, ext := range extensions {
-			if !bytes.Equal(ext, value.B) {
-				continue
-			}
-			compress = true
-			break
-		}
-	}
+	compress := u.isCompressionEnable(ctx)
 
 	ctx.SetStatusCode(fasthttp.StatusSwitchingProtocols)
 	ctx.Response.Header.Set("Upgrade", "websocket")
