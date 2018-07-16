@@ -76,8 +76,8 @@ func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) []byte {
 		clientProtocols := parseDataHeader(ctx.Request.Header.Peek("Sec-Websocket-Protocol"))
 		for _, serverProtocol := range u.Subprotocols {
 			for _, clientProtocol := range clientProtocols {
-				value.B = append(value.B[:0], serverProtocol...)
-				if bytes.Equal(clientProtocol, value.B) {
+				value.SetString(serverProtocol)
+				if bytes.Equal(clientProtocol, value.Bytes()) {
 					return clientProtocol
 				}
 			}
@@ -96,10 +96,10 @@ func (u *FastHTTPUpgrader) isCompressionEnable(ctx *fasthttp.RequestCtx) bool {
 	extensions := parseDataHeader(ctx.Request.Header.Peek("Sec-WebSocket-Extensions"))
 
 	// Negotiate PMCE
-	value.B = append(value.B[:0], "permessage-deflate"...)
+	value.SetString("permessage-deflate")
 	if u.EnableCompression {
 		for _, ext := range extensions {
-			if bytes.HasPrefix(ext, value.B) {
+			if bytes.HasPrefix(ext, value.Bytes()) {
 				return true
 			}
 		}
@@ -125,18 +125,18 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		return u.responseError(ctx, fasthttp.StatusMethodNotAllowed, badHandshake+"request method is not GET")
 	}
 
-	value.B = append(value.B[:0], "Upgrade"...)
-	if !bytes.Contains(ctx.Request.Header.Peek("Connection"), value.B) {
+	value.SetString("Upgrade")
+	if !bytes.Contains(ctx.Request.Header.Peek("Connection"), value.Bytes()) {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
 	}
 
-	value.B = append(value.B[:0], "websocket"...)
-	if !bytes.Contains(bytes.ToLower(ctx.Request.Header.Peek("Upgrade")), value.B) {
+	value.SetString("websocket")
+	if !bytes.Contains(bytes.ToLower(ctx.Request.Header.Peek("Upgrade")), value.Bytes()) {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
 	}
 
-	value.B = append(value.B[:0], "13"...)
-	if !bytes.Contains(ctx.Request.Header.Peek("Sec-Websocket-Version"), value.B) {
+	value.SetString("13")
+	if !bytes.Contains(ctx.Request.Header.Peek("Sec-Websocket-Version"), value.Bytes()) {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 	}
 
