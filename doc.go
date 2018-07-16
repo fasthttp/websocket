@@ -9,6 +9,8 @@
 // The Conn type represents a WebSocket connection. A server application calls
 // the Upgrader.Upgrade method from an HTTP request handler to get a *Conn:
 //
+// net/http
+//
 //  var upgrader = websocket.Upgrader{
 //      ReadBufferSize:  1024,
 //      WriteBufferSize: 1024,
@@ -21,6 +23,23 @@
 //          return
 //      }
 //      ... Use conn to send and receive messages.
+//  }
+//
+// erikdubbelboer/fasthttp
+//
+//  var upgrader = websocket.FastHTTPUpgrader{
+//      ReadBufferSize:  1024,
+//      WriteBufferSize: 1024,
+//  }
+//
+//  func handler(ctx *fasthttp.RequestCtx) {
+//      err := upgrader.Upgrade(ctx, func(conn *websocket.Conn) {
+//			... Use conn to send and receive messages.
+//		})
+//      if err != nil {
+//          log.Println(err)
+//          return
+//      }
 //  }
 //
 // Call the connection's WriteMessage and ReadMessage methods to send and
