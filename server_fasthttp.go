@@ -6,6 +6,7 @@ package websocket
 
 import (
 	"bytes"
+	"fmt"
 	"net"
 	"net/url"
 	"time"
@@ -117,22 +118,21 @@ func (u *FastHTTPUpgrader) isCompressionEnable(ctx *fasthttp.RequestCtx) bool {
 // If the upgrade fails, then Upgrade replies to the client with an HTTP error
 // response.
 func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHandler) error {
-	const badHandshake = "websocket: the client is not using the websocket protocol: "
 	value := bytebufferpool.Get()
 	defer bytebufferpool.Put(value)
 
 	if !ctx.IsGet() {
-		return u.responseError(ctx, fasthttp.StatusMethodNotAllowed, badHandshake+"request method is not GET")
+		return u.responseError(ctx, fasthttp.StatusMethodNotAllowed, fmt.Sprintf("%s request method is not GET", badHandshake))
 	}
 
 	value.SetString("Upgrade")
 	if !bytes.Contains(ctx.Request.Header.Peek("Connection"), value.Bytes()) {
-		return u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
+		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'upgrade' token not found in 'Connection' header", badHandshake))
 	}
 
 	value.SetString("websocket")
 	if !bytes.Contains(bytes.ToLower(ctx.Request.Header.Peek("Upgrade")), value.Bytes()) {
-		return u.responseError(ctx, fasthttp.StatusBadRequest, badHandshake+"'websocket' token not found in 'Upgrade' header")
+		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'websocket' token not found in 'Upgrade' header", badHandshake))
 	}
 
 	value.SetString("13")

@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const badHandshake = "websocket: the client is not using the websocket protocol: "
+
 // HandshakeError describes an error with the handshake from the peer.
 type HandshakeError struct {
 	message string
@@ -108,8 +110,6 @@ func (u *Upgrader) selectSubprotocol(r *http.Request, responseHeader http.Header
 // If the upgrade fails, then Upgrade replies to the client with an HTTP error
 // response.
 func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, responseHeader http.Header) (*Conn, error) {
-	const badHandshake = "websocket: the client is not using the websocket protocol: "
-
 	if !tokenListContainsValue(r.Header, "Connection", "upgrade") {
 		return u.returnError(w, r, http.StatusBadRequest, badHandshake+"'upgrade' token not found in 'Connection' header")
 	}
