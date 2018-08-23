@@ -31,6 +31,17 @@ type FastHTTPUpgrader struct {
 	// or received.
 	ReadBufferSize, WriteBufferSize int
 
+	// WriteBufferPool is a pool of buffers for write operations. If the value
+	// is not set, then write buffers are allocated to the connection for the
+	// lifetime of the connection.
+	//
+	// A pool is most useful when the application has a modest volume of writes
+	// across a large number of connections.
+	//
+	// Applications should use a single pool for each unique value of
+	// WriteBufferSize.
+	WriteBufferPool BufferPool
+
 	// Subprotocols specifies the server's supported protocols in order of
 	// preference. If this field is not nil, then the Upgrade method negotiates a
 	// subprotocol by selecting the first match in this list with a protocol
@@ -174,7 +185,10 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 	}
 
 	ctx.Hijack(func(netConn net.Conn) {
-		c := newConn(netConn, true, u.ReadBufferSize, u.WriteBufferSize)
+		// var br *bufio.Reader  // Always nil
+		var writeBuf []byte
+
+		c := newConn(netConn, true, u.ReadBufferSize, u.WriteBufferSize, u.WriteBufferPool, nil, writeBuf)
 		if subprotocol != nil {
 			c.subprotocol = string(subprotocol)
 		}
