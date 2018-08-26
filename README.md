@@ -24,7 +24,7 @@ package API is stable.
 
 ### Installation
 
-    go get github.com/savsgio/websocket
+    go get github.com/fasthttp/websocket
 
 ### Protocol Compliance
 
