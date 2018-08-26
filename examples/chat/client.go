@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/savsgio/websocket"
+	"github.com/fasthttp/websocket"
 )
 
 const (

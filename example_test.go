@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/savsgio/websocket"
+	"github.com/fasthttp/websocket"
 )
 
 var (

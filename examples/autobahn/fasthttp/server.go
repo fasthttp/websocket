@@ -13,7 +13,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/savsgio/websocket"
+	"github.com/fasthttp/websocket"
 	"github.com/valyala/fasthttp"
 )
 

@@ -12,7 +12,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/savsgio/websocket"
+	"github.com/fasthttp/websocket"
 )
 
 var addr = flag.String("addr", "localhost:8080", "http service address")

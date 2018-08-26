@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"log"
 
-	"github.com/savsgio/websocket"
+	"github.com/fasthttp/websocket"
 	"github.com/valyala/fasthttp"
 )
 
