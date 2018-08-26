@@ -3,7 +3,7 @@
 Gorilla WebSocket is a [Go](http://golang.org/) implementation of the
 [WebSocket](http://www.rfc-editor.org/rfc/rfc6455.txt) protocol.
 
-This fork adds [fasthttp](github.com/erikdubbelboer/fasthttp) support with last features and improvments of gorilla/websocket
+This fork adds [fasthttp](https://github.com/valyala/fasthttp) support with last features and improvments of gorilla/websocket
 
 [![Build Status](https://travis-ci.org/savsgio/websocket.svg?branch=master)](https://travis-ci.org/savsgio/websocket)
 [![GoDoc](https://godoc.org/github.com/savsgio/websocket?status.svg)](https://godoc.org/github.com/savsgio/websocket)

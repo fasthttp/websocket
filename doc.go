@@ -25,7 +25,7 @@
 //      ... Use conn to send and receive messages.
 //  }
 //
-// erikdubbelboer/fasthttp
+// valyala/fasthttp
 //
 //  var upgrader = websocket.FastHTTPUpgrader{
 //      ReadBufferSize:  1024,

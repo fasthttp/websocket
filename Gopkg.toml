@@ -1,5 +1,5 @@
 [[constraint]]
-  name = "github.com/erikdubbelboer/fasthttp"
+  name = "github.com/valyala/fasthttp"
   branch = "master"
 
 [[constraint]]

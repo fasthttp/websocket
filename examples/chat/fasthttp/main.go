@@ -8,7 +8,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/erikdubbelboer/fasthttp"
+	"github.com/valyala/fasthttp"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")

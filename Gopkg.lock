@@ -3,39 +3,50 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/erikdubbelboer/fasthttp"
-  packages = [
-    ".",
-    "fasthttputil",
-    "stackless"
-  ]
-  revision = "74317cef0a322f70ce7b369e804bbb0cc99c9188"
-
-[[projects]]
-  branch = "master"
+  digest = "1:cdbed6a7b574b13bbabcd8c36c5be56d6444789bab21fcd37d39655eab0b2141"
   name = "github.com/klauspost/compress"
   packages = [
     "flate",
     "gzip",
-    "zlib"
+    "zlib",
   ]
-  revision = "a17685a03bf4c0a9219e110eb90e028b36193570"
+  pruneopts = "UT"
+  revision = "b50017755d442260d792c34c7c43216d9ba7ffc7"
 
 [[projects]]
   branch = "master"
+  digest = "1:2d643962fac133904694fffa959bc3c5dcfdcee38c6f5ffdd99a3c93eb9c835c"
   name = "github.com/klauspost/cpuid"
   packages = ["."]
+  pruneopts = "UT"
   revision = "e7e905edc00ea8827e58662220139109efea09db"
 
 [[projects]]
   branch = "master"
+  digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
   name = "github.com/valyala/bytebufferpool"
   packages = ["."]
+  pruneopts = "UT"
   revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+
+[[projects]]
+  branch = "master"
+  digest = "1:e62d8a36736087b827969fefa469e1fb4299a76c4a2114ad8de85a88e00159f4"
+  name = "github.com/valyala/fasthttp"
+  packages = [
+    ".",
+    "fasthttputil",
+    "stackless",
+  ]
+  pruneopts = "UT"
+  revision = "5b46f8ddc5a49a313318191fc4a6a7ea3f603ab1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3439d9e8784e052cf20bd2b80e10e95875bb1ed21fceae18cbb875daeffcd0e4"
+  input-imports = [
+    "github.com/valyala/bytebufferpool",
+    "github.com/valyala/fasthttp",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

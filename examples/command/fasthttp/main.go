@@ -13,8 +13,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/websocket"
+	"github.com/valyala/fasthttp"
 )
 
 var (

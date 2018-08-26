@@ -9,8 +9,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/websocket"
+	"github.com/valyala/fasthttp"
 )
 
 const (

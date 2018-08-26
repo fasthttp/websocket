@@ -11,8 +11,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/erikdubbelboer/fasthttp"
 	"github.com/valyala/bytebufferpool"
+	"github.com/valyala/fasthttp"
 )
 
 // FastHTTPHandler receives a websocket connection after the handshake has been

@@ -13,8 +13,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/websocket"
+	"github.com/valyala/fasthttp"
 )
 
 var upgrader = websocket.FastHTTPUpgrader{
