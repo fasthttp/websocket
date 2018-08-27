@@ -5,7 +5,7 @@ Gorilla WebSocket is a [Go](http://golang.org/) implementation of the
 
 This fork adds [fasthttp](https://github.com/valyala/fasthttp) support with last features and improvments of gorilla/websocket
 
-[![Build Status](https://travis-ci.org/savsgio/websocket.svg?branch=master)](https://travis-ci.org/savsgio/websocket)
+[![Build Status](https://travis-ci.org/fasthttp/websocket.svg?branch=master)](https://travis-ci.org/fasthttp/websocket)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fasthttp/websocket)](https://goreportcard.com/report/github.com/fasthttp/websocket)
 [![GoDoc](https://godoc.org/github.com/fasthttp/websocket?status.svg)](https://godoc.org/github.com/fasthttp/websocket)
 
