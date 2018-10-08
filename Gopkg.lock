@@ -23,15 +23,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
+  digest = "1:f52b91ab1b58aa5217d6094865dda519f75296c3884380526cd127bc19f02461"
   name = "github.com/valyala/bytebufferpool"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+  revision = "cdfbe9377474227bb42120c1e22fd4433e7f69bf"
 
 [[projects]]
   branch = "master"
-  digest = "1:e62d8a36736087b827969fefa469e1fb4299a76c4a2114ad8de85a88e00159f4"
+  digest = "1:71d4697600b36699831188365840b77814f1d5e740d6c27aa82278ffcf1e6ea1"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -39,7 +39,7 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "5b46f8ddc5a49a313318191fc4a6a7ea3f603ab1"
+  revision = "63ea2d380ff30e6f09dc8c39205363c7c064bc31"
 
 [solve-meta]
   analyzer-name = "dep"
