@@ -31,7 +31,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:71d4697600b36699831188365840b77814f1d5e740d6c27aa82278ffcf1e6ea1"
+  digest = "1:04f09ce9dfdf7a7a7b8fb6be2b94a76a48ee1250f30b609cce89d9adfebdc47a"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -39,7 +39,7 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "63ea2d380ff30e6f09dc8c39205363c7c064bc31"
+  revision = "996610f021ff45fdc98c2ce7884d5fa4e7f9199b"
 
 [solve-meta]
   analyzer-name = "dep"
