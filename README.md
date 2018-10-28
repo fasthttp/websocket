@@ -1,9 +1,9 @@
 # Fasthttp Gorilla WebSocket
 
-Gorilla WebSocket is a [Go](http://golang.org/) implementation of the
-[WebSocket](http://www.rfc-editor.org/rfc/rfc6455.txt) protocol.
+[Gorilla WebSocket](https://github.com/gorilla/websocket) is an implementation of the
+[WebSocket protocol](http://www.rfc-editor.org/rfc/rfc6455.txt) for the [Go programming language](http://golang.org/).
 
-This fork adds [fasthttp](https://github.com/valyala/fasthttp) support with last features and improvments of gorilla/websocket
+This fork adds [fasthttp](https://github.com/valyala/fasthttp) support to the latest version of [gorilla/websocket](https://github.com/gorilla/websocket).
 
 [![Build Status](https://travis-ci.org/fasthttp/websocket.svg?branch=master)](https://travis-ci.org/fasthttp/websocket)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fasthttp/websocket)](https://goreportcard.com/report/github.com/fasthttp/websocket)
@@ -25,7 +25,25 @@ package API is stable.
 
 ### Installation
 
-    go get github.com/fasthttp/websocket
+#### Dep
+
+If you're using [dep](https://github.com/golang/dep), just use `dep ensure` to add
+a specific version of fasthttp/websocket including all its transitive dependencies to
+your project:
+
+```
+dep ensure -add github.com/fasthttp/websocket@v1.4.0
+```
+
+#### Go Get
+
+You can also use go get:
+```
+go get github.com/fasthttp/websocket
+```
+
+But beware that this will fetch the **latest commit of the master branch** which
+is never purposely broken, but usually not considered stable anyway.
 
 ### Protocol Compliance
 
@@ -58,9 +76,9 @@ Notes:
 
 1. Large messages are fragmented in [Chrome's new WebSocket implementation](http://www.ietf.org/mail-archive/web/hybi/current/msg10503.html).
 2. The application can get the type of a received data message by implementing
-   a [Codec marshal](http://godoc.org/golang.org/x/net/websocket#Codec.Marshal)
+   a [codec marshal](http://godoc.org/golang.org/x/net/websocket#Codec.Marshal)
    function.
-3. The go.net io.Reader and io.Writer operate across WebSocket frame boundaries.
+3. The [go/net](https://golang.org/pkg/net/) `io.Reader` and `io.Writer` operate across WebSocket frame boundaries.
   Read returns when the input buffer is full or a frame boundary is
   encountered. Each call to Write sends a single frame message. The Gorilla
-  io.Reader and io.WriteCloser operate on a single WebSocket message.
+  `io.Reader` and `io.WriteCloser` operate on a single WebSocket message.
