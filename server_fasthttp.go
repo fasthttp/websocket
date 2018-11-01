@@ -6,6 +6,7 @@ package websocket
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -18,6 +19,10 @@ import (
 // FastHTTPHandler receives a websocket connection after the handshake has been
 // completed. This must be provided.
 type FastHTTPHandler func(*Conn)
+
+// FastHTTPCtxHandler receives a websocket connection and a user-defined context
+// after the handshake has been completed. This must be provided.
+type FastHTTPCtxHandler func(context.Context, *Conn)
 
 // FastHTTPUpgrader specifies parameters for upgrading an HTTP connection to a
 // WebSocket connection.
@@ -122,15 +127,10 @@ func (u *FastHTTPUpgrader) isCompressionEnable(ctx *fasthttp.RequestCtx) bool {
 	return false
 }
 
-// Upgrade upgrades the HTTP server connection to the WebSocket protocol.
-//
-// The responseHeader is included in the response to the client's upgrade
-// request. Use the responseHeader to specify cookies (Set-Cookie) and the
-// application negotiated subprotocol (Sec-WebSocket-Protocol).
-//
-// If the upgrade fails, then Upgrade replies to the client with an HTTP error
-// response.
-func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHandler) error {
+func (u *FastHTTPUpgrader) upgrade(
+	ctx *fasthttp.RequestCtx,
+	callHandler func(*Conn),
+) error {
 	value := bytebufferpool.Get()
 	defer bytebufferpool.Put(value)
 
@@ -201,10 +201,43 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		// Clear deadlines set by HTTP server.
 		netConn.SetDeadline(time.Time{})
 
-		handler(c)
+		callHandler(c)
 	})
 
 	return nil
+}
+
+// Upgrade upgrades the HTTP server connection to the WebSocket protocol.
+//
+// The responseHeader is included in the response to the client's upgrade
+// request. Use the responseHeader to specify cookies (Set-Cookie) and the
+// application negotiated subprotocol (Sec-WebSocket-Protocol).
+//
+// If the upgrade fails, then Upgrade replies to the client with an HTTP error
+// response.
+func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHandler) error {
+	return u.upgrade(ctx, func(c *Conn) {
+		handler(c)
+	})
+}
+
+// UpgradeWithCtx upgrades the HTTP server connection to the WebSocket protocol
+// passing a user-defined context to the connection handler.
+//
+// The responseHeader is included in the response to the client's upgrade
+// request. Use the responseHeader to specify cookies (Set-Cookie) and the
+// application negotiated subprotocol (Sec-WebSocket-Protocol).
+//
+// If the upgrade fails, then Upgrade replies to the client with an HTTP error
+// response.
+func (u *FastHTTPUpgrader) UpgradeWithCtx(
+	usrCtx context.Context,
+	ctx *fasthttp.RequestCtx,
+	handler FastHTTPCtxHandler,
+) error {
+	return u.upgrade(ctx, func(c *Conn) {
+		handler(usrCtx, c)
+	})
 }
 
 // fastHTTPcheckSameOrigin returns true if the origin is not set or is equal to the request host.
