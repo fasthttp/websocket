@@ -2,7 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
   digest = "1:cdbed6a7b574b13bbabcd8c36c5be56d6444789bab21fcd37d39655eab0b2141"
   name = "github.com/klauspost/compress"
   packages = [
@@ -11,15 +10,16 @@
     "zlib",
   ]
   pruneopts = "UT"
-  revision = "b50017755d442260d792c34c7c43216d9ba7ffc7"
+  revision = "b939724e787a27c0005cabe3f78e7ed7987ac74f"
+  version = "v1.4.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:2d643962fac133904694fffa959bc3c5dcfdcee38c6f5ffdd99a3c93eb9c835c"
+  digest = "1:4ea0668d490ca32a38366453a486e2e8c60fbdaf1f2607c96b4a093d8a5c8de7"
   name = "github.com/klauspost/cpuid"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e7e905edc00ea8827e58662220139109efea09db"
+  revision = "ae7887de9fa5d2db4eaa8174a7eff2c1ac00f2da"
+  version = "v1.1"
 
 [[projects]]
   branch = "master"
@@ -31,7 +31,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:04f09ce9dfdf7a7a7b8fb6be2b94a76a48ee1250f30b609cce89d9adfebdc47a"
+  digest = "1:9eb359482bfc924955a901d1a3b702569c266892d8c88660c629b3e62832a1bf"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -39,7 +39,7 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "996610f021ff45fdc98c2ce7884d5fa4e7f9199b"
+  revision = "192515395f6fe387bdbdc8105358f4d890413951"
 
 [solve-meta]
   analyzer-name = "dep"

@@ -25,19 +25,6 @@ package API is stable.
 
 ### Installation
 
-#### Dep
-
-If you're using [dep](https://github.com/golang/dep), just use `dep ensure` to add
-a specific version of fasthttp/websocket including all its transitive dependencies to
-your project:
-
-```
-dep ensure -add github.com/fasthttp/websocket@v1.4.0
-```
-
-#### Go Get
-
-You can also use go get:
 ```
 go get github.com/fasthttp/websocket
 ```
