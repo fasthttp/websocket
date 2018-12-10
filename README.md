@@ -43,7 +43,7 @@ dep ensure -add github.com/fasthttp/websocket@v1.4.0
 ### Protocol Compliance
 
 The Gorilla WebSocket package passes the server tests in the [Autobahn Test
-Suite](http://autobahn.ws/testsuite) using the application in the [examples/autobahn
+Suite](https://github.com/crossbario/autobahn-testsuite) using the application in the [examples/autobahn
 subdirectory](https://github.com/fasthttp/websocket/tree/master/examples/autobahn).
 
 ### Gorilla WebSocket compared with other packages
