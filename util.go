@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"strings"
 	"unicode/utf8"
-	"unsafe"
 )
 
 var keyGUID = []byte("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
@@ -312,9 +311,4 @@ func parseDataHeader(headerValue []byte) [][]byte {
 		values[i] = bytes.TrimSpace(values[i])
 	}
 	return values
-}
-
-// b2S convert bytes array to string without memory allocation
-func b2S(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
 }
