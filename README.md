@@ -1,13 +1,14 @@
 # Fasthttp Gorilla WebSocket
 
+[![Build Status](https://travis-ci.org/fasthttp/websocket.svg?branch=master)](https://travis-ci.org/fasthttp/websocket)
+[![Go Report Card](https://goreportcard.com/badge/github.com/fasthttp/websocket)](https://goreportcard.com/report/github.com/fasthttp/websocket)
+[![GoDoc](https://godoc.org/github.com/fasthttp/websocket?status.svg)](https://godoc.org/github.com/fasthttp/websocket)
+[![GitHub release](https://img.shields.io/github/release/fasthttp/websocket.svg)](https://github.com/fasthttp/websocket/releases)
+
 [Gorilla WebSocket](https://github.com/gorilla/websocket) is an implementation of the
 [WebSocket protocol](http://www.rfc-editor.org/rfc/rfc6455.txt) for the [Go programming language](http://golang.org/).
 
 This fork adds [fasthttp](https://github.com/valyala/fasthttp) support to the latest version of [gorilla/websocket](https://github.com/gorilla/websocket).
-
-[![Build Status](https://travis-ci.org/fasthttp/websocket.svg?branch=master)](https://travis-ci.org/fasthttp/websocket)
-[![Go Report Card](https://goreportcard.com/badge/github.com/fasthttp/websocket)](https://goreportcard.com/report/github.com/fasthttp/websocket)
-[![GoDoc](https://godoc.org/github.com/fasthttp/websocket?status.svg)](https://godoc.org/github.com/fasthttp/websocket)
 
 ### Documentation
 
