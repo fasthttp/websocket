@@ -187,10 +187,6 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 	ctx.Hijack(func(netConn net.Conn) {
 		// var br *bufio.Reader  // Always nil
 		writeBuf := poolWriteBuffer.Get().([]byte)
-		defer func() {
-			writeBuf = writeBuf[0:0]
-			poolWriteBuffer.Put(writeBuf)
-		}()
 
 		c := newConn(netConn, true, u.ReadBufferSize, u.WriteBufferSize, u.WriteBufferPool, nil, writeBuf)
 		if subprotocol != nil {
@@ -206,6 +202,9 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		netConn.SetDeadline(time.Time{})
 
 		handler(c)
+
+		writeBuf = writeBuf[0:0]
+		poolWriteBuffer.Put(writeBuf)
 	})
 
 	return nil
