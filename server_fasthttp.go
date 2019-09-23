@@ -229,5 +229,5 @@ func fastHTTPcheckSameOrigin(ctx *fasthttp.RequestCtx) bool {
 // WebSocket protocol.
 func FastHTTPIsWebSocketUpgrade(ctx *fasthttp.RequestCtx) bool {
 	return (bytes.Equal(ctx.Request.Header.Peek("Connection"), strLowerUpgrade) || bytes.Equal(ctx.Request.Header.Peek("Connection"), strUpperUpgrade)) &&
-	(bytes.Equal(ctx.Request.Header.Peek("Upgrade"), strLowerWebsocket) || bytes.Equal(ctx.Request.Header.Peek("Upgrade"), strUpperWebsocket)
+	(bytes.Equal(ctx.Request.Header.Peek("Upgrade"), strLowerWebsocket) || bytes.Equal(ctx.Request.Header.Peek("Upgrade"), strUpperWebsocket))
 }
