@@ -17,8 +17,10 @@ import (
 )
 
 var strPermessageDeflate = []byte("permessage-deflate")
-var strUpgrade = []byte("Upgrade")
-var strWebsocket = []byte("websocket")
+var strLowerUpgrade = []byte("upgrade")
+var strUpperUpgrade = []byte("Upgrade")
+var strLowerWebsocket = []byte("websocket")
+var strUpperWebsocket = []byte("Websocket")
 var strWebsocketVersion = []byte("13")
 
 var poolWriteBuffer = sync.Pool{
@@ -141,11 +143,11 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		return u.responseError(ctx, fasthttp.StatusMethodNotAllowed, fmt.Sprintf("%s request method is not GET", badHandshake))
 	}
 
-	if !bytes.Contains(ctx.Request.Header.Peek("Connection"), strUpgrade) {
+	if (!bytes.Contains(ctx.Request.Header.Peek("Connection"), strLowerUpgrade)) && (!bytes.Contains(ctx.Request.Header.Peek("Connection"), strUpperUpgrade)) {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'upgrade' token not found in 'Connection' header", badHandshake))
 	}
 
-	if !bytes.Contains(bytes.ToLower(ctx.Request.Header.Peek("Upgrade")), strWebsocket) {
+	if (!bytes.Contains(bytes.ToLower(ctx.Request.Header.Peek("Upgrade")), strLowerWebsocket)) && (!bytes.Contains(bytes.ToLower(ctx.Request.Header.Peek("Upgrade")), strUpperWebsocket)) {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'websocket' token not found in 'Upgrade' header", badHandshake))
 	}
 
@@ -226,6 +228,6 @@ func fastHTTPcheckSameOrigin(ctx *fasthttp.RequestCtx) bool {
 // FastHTTPIsWebSocketUpgrade returns true if the client requested upgrade to the
 // WebSocket protocol.
 func FastHTTPIsWebSocketUpgrade(ctx *fasthttp.RequestCtx) bool {
-	return bytes.Equal(ctx.Request.Header.Peek("Connection"), strUpgrade) &&
-		bytes.Equal(ctx.Request.Header.Peek("Upgrade"), strWebsocket)
+	return (bytes.Equal(ctx.Request.Header.Peek("Connection"), strLowerUpgrade) || bytes.Equal(ctx.Request.Header.Peek("Connection"), strUpperUpgrade)) &&
+	(bytes.Equal(ctx.Request.Header.Peek("Upgrade"), strLowerWebsocket) || bytes.Equal(ctx.Request.Header.Peek("Upgrade"), strUpperWebsocket)
 }
