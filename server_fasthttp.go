@@ -17,8 +17,6 @@ import (
 )
 
 var strPermessageDeflate = []byte("permessage-deflate")
-var strUpgrade = []byte("Upgrade")
-var strWebsocket = []byte("websocket")
 var strWebsocketVersion = []byte("13")
 
 var poolWriteBuffer = sync.Pool{
@@ -141,11 +139,11 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		return u.responseError(ctx, fasthttp.StatusMethodNotAllowed, fmt.Sprintf("%s request method is not GET", badHandshake))
 	}
 
-	if !bytes.Contains(ctx.Request.Header.Peek("Connection"), strUpgrade) {
+	if !equalASCIIFold(gotils.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'upgrade' token not found in 'Connection' header", badHandshake))
 	}
 
-	if !bytes.Contains(bytes.ToLower(ctx.Request.Header.Peek("Upgrade")), strWebsocket) {
+	if !equalASCIIFold(gotils.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket") {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'websocket' token not found in 'Upgrade' header", badHandshake))
 	}
 
@@ -226,6 +224,6 @@ func fastHTTPcheckSameOrigin(ctx *fasthttp.RequestCtx) bool {
 // FastHTTPIsWebSocketUpgrade returns true if the client requested upgrade to the
 // WebSocket protocol.
 func FastHTTPIsWebSocketUpgrade(ctx *fasthttp.RequestCtx) bool {
-	return bytes.Equal(ctx.Request.Header.Peek("Connection"), strUpgrade) &&
-		bytes.Equal(ctx.Request.Header.Peek("Upgrade"), strWebsocket)
+	return equalASCIIFold(gotils.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") &&
+		equalASCIIFold(gotils.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket")
 }
