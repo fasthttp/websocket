@@ -139,11 +139,11 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		return u.responseError(ctx, fasthttp.StatusMethodNotAllowed, fmt.Sprintf("%s request method is not GET", badHandshake))
 	}
 
-	if !equalASCIIFold(gotils.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") {
+	if !tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'upgrade' token not found in 'Connection' header", badHandshake))
 	}
 
-	if !equalASCIIFold(gotils.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket") {
+	if !tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket") {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'websocket' token not found in 'Upgrade' header", badHandshake))
 	}
 
@@ -224,6 +224,6 @@ func fastHTTPcheckSameOrigin(ctx *fasthttp.RequestCtx) bool {
 // FastHTTPIsWebSocketUpgrade returns true if the client requested upgrade to the
 // WebSocket protocol.
 func FastHTTPIsWebSocketUpgrade(ctx *fasthttp.RequestCtx) bool {
-	return equalASCIIFold(gotils.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") &&
-		equalASCIIFold(gotils.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket")
+	return tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") &&
+		tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket")
 }
