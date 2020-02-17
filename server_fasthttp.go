@@ -17,7 +17,6 @@ import (
 )
 
 var strPermessageDeflate = []byte("permessage-deflate")
-var strWebsocketVersion = []byte("13")
 
 var poolWriteBuffer = sync.Pool{
 	New: func() interface{} {
@@ -147,7 +146,7 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'websocket' token not found in 'Upgrade' header", badHandshake))
 	}
 
-	if !bytes.Contains(ctx.Request.Header.Peek("Sec-Websocket-Version"), strWebsocketVersion) {
+	if !tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Sec-Websocket-Version")), "13") {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 	}
 
