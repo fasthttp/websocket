@@ -58,7 +58,7 @@ var homeTemplate = template.Must(template.New("").Parse(`
 <html>
 <head>
 <meta charset="utf-8">
-<script>  
+<script>
 window.addEventListener("load", function(evt) {
 
     var output = document.getElementById("output");
@@ -67,7 +67,7 @@ window.addEventListener("load", function(evt) {
 
     var print = function(message) {
         var d = document.createElement("div");
-        d.innerHTML = message;
+        d.textContent = message;
         output.appendChild(d);
     };
 

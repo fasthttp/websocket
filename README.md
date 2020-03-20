@@ -12,7 +12,7 @@ This fork adds [fasthttp](https://github.com/valyala/fasthttp) support to the la
 
 ### Documentation
 
-* [API Reference](http://godoc.org/github.com/fasthttp/websocket)
+* [API Reference](https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc)
 * [Chat example](https://github.com/fasthttp/websocket/tree/master/examples/chat)
 * [Command example](https://github.com/fasthttp/websocket/tree/master/examples/command)
 * [Client and server example](https://github.com/fasthttp/websocket/tree/master/examples/echo)
