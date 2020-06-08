@@ -13,10 +13,10 @@ This fork adds [fasthttp](https://github.com/valyala/fasthttp) support to the la
 ### Documentation
 
 * [API Reference](https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc)
-* [Chat example](https://github.com/fasthttp/websocket/tree/master/examples/chat)
-* [Command example](https://github.com/fasthttp/websocket/tree/master/examples/command)
-* [Client and server example](https://github.com/fasthttp/websocket/tree/master/examples/echo)
-* [File watch example](https://github.com/fasthttp/websocket/tree/master/examples/filewatch)
+* [Chat example](_examples/chat)
+* [Command example](_examples/command)
+* [Client and server example](_examples/echo)
+* [File watch example](_examples/filewatch)
 
 ### Status
 
@@ -45,7 +45,7 @@ dep ensure -add github.com/fasthttp/websocket@v1.4.0
 
 The Gorilla WebSocket package passes the server tests in the [Autobahn Test
 Suite](https://github.com/crossbario/autobahn-testsuite) using the application in the [examples/autobahn
-subdirectory](https://github.com/fasthttp/websocket/tree/master/examples/autobahn).
+subdirectory](_examples/autobahn).
 
 ### Gorilla WebSocket compared with other packages
 
