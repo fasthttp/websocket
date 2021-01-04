@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/savsgio/gotils"
+	"github.com/savsgio/gotils/strconv"
 	"github.com/valyala/fasthttp"
 )
 
@@ -98,7 +98,7 @@ func (u *FastHTTPUpgrader) selectSubprotocol(ctx *fasthttp.RequestCtx) []byte {
 
 		for _, serverProtocol := range u.Subprotocols {
 			for _, clientProtocol := range clientProtocols {
-				if gotils.B2S(clientProtocol) == serverProtocol {
+				if strconv.B2S(clientProtocol) == serverProtocol {
 					return clientProtocol
 				}
 			}
@@ -138,15 +138,15 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		return u.responseError(ctx, fasthttp.StatusMethodNotAllowed, fmt.Sprintf("%s request method is not GET", badHandshake))
 	}
 
-	if !tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") {
+	if !tokenContainsValue(strconv.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'upgrade' token not found in 'Connection' header", badHandshake))
 	}
 
-	if !tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket") {
+	if !tokenContainsValue(strconv.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket") {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, fmt.Sprintf("%s 'websocket' token not found in 'Upgrade' header", badHandshake))
 	}
 
-	if !tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Sec-Websocket-Version")), "13") {
+	if !tokenContainsValue(strconv.B2S(ctx.Request.Header.Peek("Sec-Websocket-Version")), "13") {
 		return u.responseError(ctx, fasthttp.StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 	}
 
@@ -187,7 +187,7 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 
 		c := newConn(netConn, true, u.ReadBufferSize, u.WriteBufferSize, u.WriteBufferPool, nil, writeBuf)
 		if subprotocol != nil {
-			c.subprotocol = gotils.B2S(subprotocol)
+			c.subprotocol = strconv.B2S(subprotocol)
 		}
 
 		if compress {
@@ -213,16 +213,16 @@ func fastHTTPcheckSameOrigin(ctx *fasthttp.RequestCtx) bool {
 	if len(origin) == 0 {
 		return true
 	}
-	u, err := url.Parse(gotils.B2S(origin))
+	u, err := url.Parse(strconv.B2S(origin))
 	if err != nil {
 		return false
 	}
-	return equalASCIIFold(u.Host, gotils.B2S(ctx.Host()))
+	return equalASCIIFold(u.Host, strconv.B2S(ctx.Host()))
 }
 
 // FastHTTPIsWebSocketUpgrade returns true if the client requested upgrade to the
 // WebSocket protocol.
 func FastHTTPIsWebSocketUpgrade(ctx *fasthttp.RequestCtx) bool {
-	return tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") &&
-		tokenContainsValue(gotils.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket")
+	return tokenContainsValue(strconv.B2S(ctx.Request.Header.Peek("Connection")), "Upgrade") &&
+		tokenContainsValue(strconv.B2S(ctx.Request.Header.Peek("Upgrade")), "Websocket")
 }
