@@ -156,6 +156,13 @@ func (d *Dialer) DialContext(ctx context.Context, urlStr string, requestHeader h
 		return nil, nil, err
 	}
 
+	unixSock := ""
+
+	if strings.HasPrefix(urlStr, "ws+unix:") {
+		unixSock = strings.Split(urlStr, ":")[1]
+		urlStr = strings.Replace(urlStr, "ws+unix:"+unixSock, "ws", 1)
+	}
+
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, nil, err
@@ -288,7 +295,13 @@ func (d *Dialer) DialContext(ctx context.Context, urlStr string, requestHeader h
 		trace.GetConn(hostPort)
 	}
 
-	netConn, err := netDial("tcp", hostPort)
+	var netConn net.Conn
+
+	if unixSock[0] != 0 {
+		netConn, err = netDial("unix", unixSock)
+	} else {
+		netConn, err = netDial("tcp", hostPort)
+	}
 	if trace != nil && trace.GotConn != nil {
 		trace.GotConn(httptrace.GotConnInfo{
 			Conn: netConn,
