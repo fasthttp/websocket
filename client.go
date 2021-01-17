@@ -297,7 +297,7 @@ func (d *Dialer) DialContext(ctx context.Context, urlStr string, requestHeader h
 
 	var netConn net.Conn
 
-	if unixSock[0] != 0 {
+	if len(unixSock) > 0 {
 		netConn, err = netDial("unix", unixSock)
 	} else {
 		netConn, err = netDial("tcp", hostPort)
