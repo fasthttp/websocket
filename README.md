@@ -1,6 +1,6 @@
 # Fasthttp Gorilla WebSocket
 
-[![Build Status](https://travis-ci.org/fasthttp/websocket.svg?branch=master)](https://travis-ci.org/fasthttp/websocket)
+[![Test status](https://github.com/fasthttp/websocket/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/fasthttp/websocket/actions?workflow=test)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fasthttp/websocket)](https://goreportcard.com/report/github.com/fasthttp/websocket)
 [![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/fasthttp/websocket)
 [![GitHub release](https://img.shields.io/github/release/fasthttp/websocket.svg)](https://github.com/fasthttp/websocket/releases)
