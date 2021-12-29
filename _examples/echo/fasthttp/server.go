@@ -1,3 +1,10 @@
+// Copyright 2015 The Gorilla WebSocket Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -83,7 +90,7 @@ window.addEventListener("load", function(evt) {
         var d = document.createElement("div");
         d.textContent = message;
         output.appendChild(d);
-		output.scroll(0, output.scrollHeight);
+        output.scroll(0, output.scrollHeight);
     };
 
     document.getElementById("open").onclick = function(evt) {
@@ -130,8 +137,8 @@ window.addEventListener("load", function(evt) {
 <body>
 <table>
 <tr><td valign="top" width="50%">
-<p>Click "Open" to create a connection to the server,
-"Send" to send a message to the server and "Close" to close the connection.
+<p>Click "Open" to create a connection to the server, 
+"Send" to send a message to the server and "Close" to close the connection. 
 You can change the message and send multiple times.
 <p>
 <form>
