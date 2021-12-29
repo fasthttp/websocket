@@ -31,16 +31,6 @@ go get github.com/fasthttp/websocket
 ```
 But beware that this will fetch the **latest commit of the master branch** which is never purposely broken, but usually not considered stable anyway.
 
-#### Dep
- If you're using [dep](https://github.com/golang/dep), just use `dep ensure` to add
-a specific version of fasthttp/websocket including all its transitive dependencies to
-your project:
- ```
-dep ensure -add github.com/fasthttp/websocket@v1.4.0
-```
-
-**IMPORTANT:** [dep](https://github.com/golang/dep) is only supported until version v1.4.0. In future versions will use Go modules.
-
 ### Protocol Compliance
 
 The Gorilla WebSocket package passes the server tests in the [Autobahn Test
