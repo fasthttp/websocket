@@ -6,9 +6,10 @@ package websocket
 
 import (
 	"bytes"
-	"compress/flate"
 	"math/rand"
 	"testing"
+
+	"github.com/klauspost/compress/flate"
 )
 
 var preparedMessageTests = []struct {

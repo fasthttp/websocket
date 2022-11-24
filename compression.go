@@ -5,11 +5,12 @@
 package websocket
 
 import (
-	"compress/flate"
 	"errors"
 	"io"
 	"strings"
 	"sync"
+
+	"github.com/klauspost/compress/flate"
 )
 
 const (

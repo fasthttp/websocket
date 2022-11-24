@@ -1308,7 +1308,7 @@ func (c *Conn) EnableWriteCompression(enable bool) {
 
 // SetCompressionLevel sets the flate compression level for subsequent text and
 // binary messages. This function is a noop if compression was not negotiated
-// with the peer. See the compress/flate package for a description of
+// with the peer. See the github.com/klauspost/compress/flate package for a description of
 // compression levels.
 func (c *Conn) SetCompressionLevel(level int) error {
 	if c == nil {
