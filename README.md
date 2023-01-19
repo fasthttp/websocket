@@ -10,6 +10,14 @@
 
 This fork adds [fasthttp](https://github.com/valyala/fasthttp) support to the latest version of [gorilla/websocket](https://github.com/gorilla/websocket).
 
+<!--
+---
+
+**The Gorilla project has been archived, and is no longer under active maintainenance. You can read more here: https://github.com/gorilla#gorilla-toolkit**
+
+---
+-->
+
 ### Documentation
 
 * [API Reference](https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc)
