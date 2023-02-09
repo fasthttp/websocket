@@ -1,22 +1,13 @@
-# Fasthttp Gorilla WebSocket
+# Fasthttp WebSocket
 
 [![Test status](https://github.com/fasthttp/websocket/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/fasthttp/websocket/actions?workflow=test)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fasthttp/websocket)](https://goreportcard.com/report/github.com/fasthttp/websocket)
 [![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/fasthttp/websocket)
 [![GitHub release](https://img.shields.io/github/release/fasthttp/websocket.svg)](https://github.com/fasthttp/websocket/releases)
 
-[Gorilla WebSocket](https://github.com/gorilla/websocket) is a [Go](http://golang.org/) implementation of the
-[WebSocket](http://www.rfc-editor.org/rfc/rfc6455.txt) protocol.
+WebSocket is a [Go](http://golang.org/) implementation of the [WebSocket protocol](http://www.rfc-editor.org/rfc/rfc6455.txt) for [fasthttp](https://github.com/valyala/fasthttp).
 
-This fork adds [fasthttp](https://github.com/valyala/fasthttp) support to the latest version of [gorilla/websocket](https://github.com/gorilla/websocket).
-
-<!--
----
-
-**The Gorilla project has been archived, and is no longer under active maintainenance. You can read more here: https://github.com/gorilla#gorilla-toolkit**
-
----
--->
+_This project is a fork of the latest version of [gorilla/websocket](https://github.com/gorilla/websocket) that continues its development independently._
 
 ### Documentation
 
@@ -28,7 +19,7 @@ This fork adds [fasthttp](https://github.com/valyala/fasthttp) support to the la
 
 ### Status
 
-The Gorilla WebSocket package provides a complete and tested implementation of
+The WebSocket package provides a complete and tested implementation of
 the [WebSocket](http://www.rfc-editor.org/rfc/rfc6455.txt) protocol. The
 package API is stable.
 
@@ -41,6 +32,6 @@ But beware that this will fetch the **latest commit of the master branch** which
 
 ### Protocol Compliance
 
-The Gorilla WebSocket package passes the server tests in the [Autobahn Test
+The WebSocket package passes the server tests in the [Autobahn Test
 Suite](https://github.com/crossbario/autobahn-testsuite) using the application in the [examples/autobahn
 subdirectory](_examples/autobahn).
