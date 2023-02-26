@@ -86,7 +86,7 @@ func echoCopyFull(ctx *fasthttp.RequestCtx) {
 }
 
 // echoReadAll echoes messages from the client by reading the entire message
-// with ioutil.ReadAll.
+// withio.ReadAll.
 func echoReadAll(ctx *fasthttp.RequestCtx, writeMessage, writePrepared bool) {
 	err := upgrader.Upgrade(ctx, func(conn *websocket.Conn) {
 		defer conn.Close()
