@@ -48,7 +48,7 @@ func readFileIfModified(lastMod time.Time) ([]byte, time.Time, error) {
 	if !fi.ModTime().After(lastMod) {
 		return nil, lastMod, nil
 	}
-	p, err :=io.ReadFile(filename)
+	p, err := io.ReadFile(filename)
 	if err != nil {
 		return nil, fi.ModTime(), err
 	}

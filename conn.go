@@ -1153,7 +1153,7 @@ func (c *Conn) ReadMessage() (messageType int, p []byte, err error) {
 	if err != nil {
 		return messageType, nil, err
 	}
-	p, err =io.ReadAll(r)
+	p, err = io.ReadAll(r)
 	return messageType, p, err
 }
 

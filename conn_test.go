@@ -124,7 +124,7 @@ func TestFraming(t *testing.T) {
 						}
 
 						t.Logf("frame size: %d", n)
-						rbuf, err :=io.ReadAll(r)
+						rbuf, err := io.ReadAll(r)
 						if err != nil {
 							t.Errorf("%s: ReadFull() returned rbuf, %v", name, err)
 							continue
