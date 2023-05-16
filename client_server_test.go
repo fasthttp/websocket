@@ -49,7 +49,6 @@ type cstHandler struct{ *testing.T }
 type cstServer struct {
 	*httptest.Server
 	URL string
-	t   *testing.T
 }
 
 const (
@@ -463,7 +462,7 @@ func TestBadMethod(t *testing.T) {
 	}))
 	defer s.Close()
 
-	req, err := http.NewRequest(http.MethodPost, s.URL, strings.NewReader(""))
+	req, err := http.NewRequest(http.MethodPost, s.URL, http.NoBody)
 	if err != nil {
 		t.Fatalf("NewRequest returned error %v", err)
 	}
@@ -987,11 +986,9 @@ func TestNetDialConnect(t *testing.T) {
 			tlsClientConfig:   nil,
 		},
 		{
-			name:   "HTTP server, NetDialContext undefined, shall fallback to NetDial",
-			server: server,
-			netDial: func(network, addr string) (net.Conn, error) {
-				return net.Dial(network, addr)
-			},
+			name:           "HTTP server, NetDialContext undefined, shall fallback to NetDial",
+			server:         server,
+			netDial:        net.Dial,
 			netDialContext: nil,
 			netDialTLSContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				return nil, errors.New("NetDialTLSContext should not be called")
@@ -1034,11 +1031,9 @@ func TestNetDialConnect(t *testing.T) {
 			tlsClientConfig:   tlsConfig,
 		},
 		{
-			name:   "HTTPS server, NetDialTLSContext and NetDialContext undefined, shall fallback to NetDial and do handshake",
-			server: tlsServer,
-			netDial: func(network, addr string) (net.Conn, error) {
-				return net.Dial(network, addr)
-			},
+			name:              "HTTPS server, NetDialTLSContext and NetDialContext undefined, shall fallback to NetDial and do handshake",
+			server:            tlsServer,
+			netDial:           net.Dial,
 			netDialContext:    nil,
 			netDialTLSContext: nil,
 			tlsClientConfig:   tlsConfig,
@@ -1117,7 +1112,7 @@ func TestNextProtos(t *testing.T) {
 
 	// Asserts that Dialer.TLSClientConfig.NextProtos contains "h2"
 	// after the Client.Get call from net/http above.
-	var containsHTTP2 bool = false
+	containsHTTP2 := false
 	for _, proto := range d.TLSClientConfig.NextProtos {
 		if proto == "h2" {
 			containsHTTP2 = true
