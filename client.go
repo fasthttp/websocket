@@ -11,12 +11,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 // ErrBadHandshake is returned when the server response to opening handshake is
@@ -224,6 +227,7 @@ func (d *Dialer) DialContext(ctx context.Context, urlStr string, requestHeader h
 			k == "Connection" ||
 			k == "Sec-Websocket-Key" ||
 			k == "Sec-Websocket-Version" ||
+			//#nosec G101 (CWE-798): Potential HTTP request smuggling via parameter pollution
 			k == "Sec-Websocket-Extensions" ||
 			(k == "Sec-Websocket-Protocol" && len(d.Subprotocols) > 0):
 			return nil, nil, errors.New("websocket: duplicate header not allowed: " + k)
@@ -289,7 +293,9 @@ func (d *Dialer) DialContext(ctx context.Context, urlStr string, requestHeader h
 			}
 			err = c.SetDeadline(deadline)
 			if err != nil {
-				c.Close()
+				if err := c.Close(); err != nil {
+					log.Printf("websocket: failed to close network connection: %v", err)
+				}
 				return nil, err
 			}
 			return c, nil
@@ -303,7 +309,7 @@ func (d *Dialer) DialContext(ctx context.Context, urlStr string, requestHeader h
 			return nil, nil, err
 		}
 		if proxyURL != nil {
-			dialer, err := proxy_FromURL(proxyURL, netDialerFunc(netDial))
+			dialer, err := proxy.FromURL(proxyURL, netDialerFunc(netDial))
 			if err != nil {
 				return nil, nil, err
 			}
@@ -329,7 +335,9 @@ func (d *Dialer) DialContext(ctx context.Context, urlStr string, requestHeader h
 
 	defer func() {
 		if netConn != nil {
-			netConn.Close()
+			if err := netConn.Close(); err != nil {
+				log.Printf("websocket: failed to close network connection: %v", err)
+			}
 		}
 	}()
 
@@ -420,14 +428,16 @@ func (d *Dialer) DialContext(ctx context.Context, urlStr string, requestHeader h
 	resp.Body = io.NopCloser(bytes.NewReader([]byte{}))
 	conn.subprotocol = resp.Header.Get("Sec-Websocket-Protocol")
 
-	netConn.SetDeadline(time.Time{})
+	if err := netConn.SetDeadline(time.Time{}); err != nil {
+		return nil, nil, err
+	}
 	netConn = nil // to avoid close in defer.
 	return conn, resp, nil
 }
 
 func cloneTLSConfig(cfg *tls.Config) *tls.Config {
 	if cfg == nil {
-		return &tls.Config{}
+		return &tls.Config{MinVersion: tls.VersionTLS12}
 	}
 	return cfg.Clone()
 }

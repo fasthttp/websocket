@@ -22,7 +22,9 @@ func TestTruncWriter(t *testing.T) {
 			if m > n {
 				m = n
 			}
-			w.Write(p[:m])
+			if _, err := w.Write(p[:m]); err != nil {
+				t.Fatal(err)
+			}
 			p = p[m:]
 		}
 		if b.String() != data[:len(data)-len(w.p)] {
@@ -46,7 +48,9 @@ func BenchmarkWriteNoCompression(b *testing.B) {
 	messages := textMessages(100)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		c.WriteMessage(TextMessage, messages[i%len(messages)])
+		if err := c.WriteMessage(TextMessage, messages[i%len(messages)]); err != nil {
+			b.Fatal(err)
+		}
 	}
 	b.ReportAllocs()
 }
@@ -59,7 +63,9 @@ func BenchmarkWriteWithCompression(b *testing.B) {
 	c.newCompressionWriter = compressNoContextTakeover
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		c.WriteMessage(TextMessage, messages[i%len(messages)])
+		if err := c.WriteMessage(TextMessage, messages[i%len(messages)]); err != nil {
+			b.Fatal(err)
+		}
 	}
 	b.ReportAllocs()
 }
