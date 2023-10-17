@@ -20,8 +20,7 @@ var strPermessageDeflate = []byte("permessage-deflate")
 
 var poolWriteBuffer = sync.Pool{
 	New: func() interface{} {
-		var buf []byte
-		return buf
+		return new(writePoolData)
 	},
 }
 
@@ -183,9 +182,9 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 
 	ctx.Hijack(func(netConn net.Conn) {
 		// var br *bufio.Reader  // Always nil
-		writeBuf := poolWriteBuffer.Get().([]byte)
+		writeBuf := poolWriteBuffer.Get().(*writePoolData)
 
-		c := newConn(netConn, true, u.ReadBufferSize, u.WriteBufferSize, u.WriteBufferPool, nil, writeBuf)
+		c := newConn(netConn, true, u.ReadBufferSize, u.WriteBufferSize, u.WriteBufferPool, nil, writeBuf.buf)
 		if subprotocol != nil {
 			c.subprotocol = strconv.B2S(subprotocol)
 		}
@@ -196,11 +195,11 @@ func (u *FastHTTPUpgrader) Upgrade(ctx *fasthttp.RequestCtx, handler FastHTTPHan
 		}
 
 		// Clear deadlines set by HTTP server.
-		netConn.SetDeadline(time.Time{})
+		_ = netConn.SetDeadline(time.Time{})
 
 		handler(c)
 
-		writeBuf = writeBuf[0:0]
+		writeBuf.buf = writeBuf.buf[0:0]
 		poolWriteBuffer.Put(writeBuf)
 	})
 

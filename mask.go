@@ -23,8 +23,9 @@ func maskBytes(key [4]byte, pos int, b []byte) int {
 	}
 
 	// Mask one byte at a time to word boundary.
-	//#nosec G103 -- (CWE-242) Has been audited
-	if n := int(uintptr(unsafe.Pointer(&b[0]))) % wordSize; n != 0 {
+	// #nosec G103 -- (CWE-242) Has been audited
+	n := int(uintptr(unsafe.Pointer(&b[0]))) % wordSize
+	if n != 0 {
 		n = wordSize - n
 		for i := range b[:n] {
 			b[i] ^= key[pos&3]
@@ -42,7 +43,7 @@ func maskBytes(key [4]byte, pos int, b []byte) int {
 	kw := *(*uintptr)(unsafe.Pointer(&k))
 
 	// Mask one word at a time.
-	n := (len(b) / wordSize) * wordSize
+	n = (len(b) / wordSize) * wordSize
 	for i := 0; i < n; i += wordSize {
 		//#nosec G103 -- (CWE-242) Has been audited
 		*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(&b[0])) + uintptr(i))) ^= kw

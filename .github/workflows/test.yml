@@ -27,9 +27,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         uses: securego/gosec@master
         with:
-          args: -exclude-dir examples ./...
+          args: -exclude-dir _examples ./...
 
       - name: Run GoVulnCheck
+        if: matrix.go-version != '1.17.x' && matrix.go-version != '1.18.x'
         uses: golang/govulncheck-action@v1
         with:
           go-version-input: ${{ matrix.go-version }}

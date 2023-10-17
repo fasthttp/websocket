@@ -25,7 +25,7 @@ func computeAcceptKey(challengeKey string) string {
 }
 
 func computeAcceptKeyBytes(challengeKey []byte) string {
-	h := sha1.New()
+	h := sha1.New() //#nosec G401 -- (CWE-326) https://datatracker.ietf.org/doc/html/rfc6455#page-54
 	h.Write(challengeKey)
 	h.Write(keyGUID)
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
