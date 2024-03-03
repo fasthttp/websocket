@@ -4,10 +4,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run GolangCI-Lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.53
+          version: v1.56.2
           args: --timeout=5m
