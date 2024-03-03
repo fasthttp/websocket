@@ -174,7 +174,7 @@ func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, responseHeade
 		}
 	}
 
-	netConn, brw, err := http.NewResponseController(w).Hijack()
+	netConn, brw, err := HijackResponse(r, w)
 	if err != nil {
 		return u.returnError(w, r, http.StatusInternalServerError, err.Error())
 	}
