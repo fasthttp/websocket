@@ -38,7 +38,7 @@ sends them to the hub.
 ### Hub 
 
 The code for the `Hub` type is in
-[hub.go](https://github.com/fasthttp/websocket/blob/master/examples/chat/hub.go). 
+[hub.go](https://github.com/fasthttp/websocket/blob/master/examples/chat/hub.go).
 The application's `main` function starts the hub's `run` method as a goroutine.
 Clients send requests to the hub using the `register`, `unregister` and
 `broadcast` channels.
