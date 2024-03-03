@@ -1,15 +1,15 @@
 module github.com/fasthttp/websocket
 
-go 1.18
+go 1.20
 
 require (
-	github.com/klauspost/compress v1.17.3
-	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee
-	github.com/valyala/fasthttp v1.51.0
-	golang.org/x/net v0.18.0
+	github.com/klauspost/compress v1.17.7
+	github.com/savsgio/gotils v0.0.0-20240303165341-b550f9725c9d
+	github.com/valyala/fasthttp v1.52.0
+	golang.org/x/net v0.21.0
 )
 
 require (
-	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 )
