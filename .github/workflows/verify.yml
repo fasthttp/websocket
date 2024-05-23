@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run GolangCI-Lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v5
         with:
           version: v1.58.2
           args: --timeout=5m
