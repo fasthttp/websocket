@@ -3,10 +3,10 @@ module github.com/fasthttp/websocket
 go 1.20
 
 require (
-	github.com/klauspost/compress v1.17.8
-	github.com/savsgio/gotils v0.0.0-20240303185622-093b76447511
-	github.com/valyala/fasthttp v1.54.0
-	golang.org/x/net v0.25.0
+	github.com/klauspost/compress v1.17.9
+	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38
+	github.com/valyala/fasthttp v1.55.0
+	golang.org/x/net v0.26.0
 )
 
 require (
