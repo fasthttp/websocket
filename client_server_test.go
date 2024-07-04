@@ -5,6 +5,7 @@
 package websocket
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/tls"
@@ -23,6 +24,7 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -44,11 +46,15 @@ var cstDialer = Dialer{
 	HandshakeTimeout: 30 * time.Second,
 }
 
-type cstHandler struct{ *testing.T }
+type cstHandler struct {
+	*testing.T
+	s *cstServer
+}
 
 type cstServer struct {
-	*httptest.Server
-	URL string
+	URL    string
+	Server *httptest.Server
+	wg     sync.WaitGroup
 }
 
 const (
@@ -57,9 +63,15 @@ const (
 	cstRequestURI = cstPath + "?" + cstRawQuery
 )
 
+func (s *cstServer) Close() {
+	s.Server.Close()
+	// Wait for handler functions to complete.
+	s.wg.Wait()
+}
+
 func newServer(t *testing.T) *cstServer {
 	var s cstServer
-	s.Server = httptest.NewServer(cstHandler{t})
+	s.Server = httptest.NewServer(cstHandler{T: t, s: &s})
 	s.Server.URL += cstRequestURI
 	s.URL = makeWsProto(s.Server.URL)
 	return &s
@@ -67,13 +79,19 @@ func newServer(t *testing.T) *cstServer {
 
 func newTLSServer(t *testing.T) *cstServer {
 	var s cstServer
-	s.Server = httptest.NewTLSServer(cstHandler{t})
+	s.Server = httptest.NewTLSServer(cstHandler{T: t, s: &s})
 	s.Server.URL += cstRequestURI
 	s.URL = makeWsProto(s.Server.URL)
 	return &s
 }
 
 func (t cstHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Because tests wait for a response from a server, we are guaranteed that
+	// the wait group count is incremented before the test waits on the group
+	// in the call to (*cstServer).Close().
+	t.s.wg.Add(1)
+	defer t.s.wg.Done()
+
 	if r.URL.Path != cstPath {
 		t.Logf("path=%v, want %v", r.URL.Path, cstPath)
 		http.Error(w, "bad path", http.StatusBadRequest)
@@ -92,6 +110,7 @@ func (t cstHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	ws, err := cstUpgrader.Upgrade(w, r, http.Header{"Set-Cookie": {"sessionID=1234"}})
 	if err != nil {
+		t.Logf("Upgrade: %v", err)
 		return
 	}
 	defer ws.Close()
@@ -103,16 +122,20 @@ func (t cstHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	op, rd, err := ws.NextReader()
 	if err != nil {
+		t.Logf("NextReader: %v", err)
 		return
 	}
 	wr, err := ws.NextWriter(op)
 	if err != nil {
+		t.Logf("NextWriter: %v", err)
 		return
 	}
 	if _, err = io.Copy(wr, rd); err != nil {
+		t.Logf("NextWriter: %v", err)
 		return
 	}
 	if err := wr.Close(); err != nil {
+		t.Logf("Close: %v", err)
 		return
 	}
 }
@@ -142,7 +165,6 @@ func sendRecv(t *testing.T, ws *Conn) {
 }
 
 func TestProxyDial(t *testing.T) {
-	t.Parallel()
 
 	s := newServer(t)
 	defer s.Close()
@@ -181,7 +203,6 @@ func TestProxyDial(t *testing.T) {
 }
 
 func TestProxyAuthorizationDial(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -222,7 +243,6 @@ func TestProxyAuthorizationDial(t *testing.T) {
 }
 
 func TestDial(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -235,7 +255,6 @@ func TestDial(t *testing.T) {
 }
 
 func TestDialCookieJar(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -298,7 +317,6 @@ func rootCAs(t *testing.T, s *httptest.Server) *x509.CertPool {
 }
 
 func TestDialTLS(t *testing.T) {
-	t.Parallel()
 	s := newTLSServer(t)
 	defer s.Close()
 
@@ -313,7 +331,6 @@ func TestDialTLS(t *testing.T) {
 }
 
 func TestDialTimeout(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -370,7 +387,6 @@ func (c *requireDeadlineNetConn) LocalAddr() net.Addr  { return c.c.LocalAddr() 
 func (c *requireDeadlineNetConn) RemoteAddr() net.Addr { return c.c.RemoteAddr() }
 
 func TestHandshakeTimeout(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -387,7 +403,6 @@ func TestHandshakeTimeout(t *testing.T) {
 }
 
 func TestHandshakeTimeoutInContext(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -409,7 +424,6 @@ func TestHandshakeTimeoutInContext(t *testing.T) {
 }
 
 func TestDialBadScheme(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -421,7 +435,6 @@ func TestDialBadScheme(t *testing.T) {
 }
 
 func TestDialBadOrigin(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -439,7 +452,6 @@ func TestDialBadOrigin(t *testing.T) {
 }
 
 func TestDialBadHeader(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -459,7 +471,6 @@ func TestDialBadHeader(t *testing.T) {
 }
 
 func TestBadMethod(t *testing.T) {
-	t.Parallel()
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ws, err := cstUpgrader.Upgrade(w, r, nil)
 		if err == nil {
@@ -487,8 +498,38 @@ func TestBadMethod(t *testing.T) {
 	}
 }
 
-func TestDialExtraTokensInRespHeaders(t *testing.T) {
+func TestNoUpgrade(t *testing.T) {
 	t.Parallel()
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ws, err := cstUpgrader.Upgrade(w, r, nil)
+		if err == nil {
+			t.Errorf("handshake succeeded, expect fail")
+			ws.Close()
+		}
+	}))
+	defer s.Close()
+
+	req, err := http.NewRequest(http.MethodGet, s.URL, strings.NewReader(""))
+	if err != nil {
+		t.Fatalf("NewRequest returned error %v", err)
+	}
+	req.Header.Set("Connection", "upgrade")
+	req.Header.Set("Sec-Websocket-Version", "13")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("Do returned error %v", err)
+	}
+	resp.Body.Close()
+	if u := resp.Header.Get("Upgrade"); u != "websocket" {
+		t.Errorf("Uprade response header is %q, want %q", u, "websocket")
+	}
+	if resp.StatusCode != http.StatusUpgradeRequired {
+		t.Errorf("Status = %d, want %d", resp.StatusCode, http.StatusUpgradeRequired)
+	}
+}
+
+func TestDialExtraTokensInRespHeaders(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		challengeKey := r.Header.Get("Sec-Websocket-Key")
 		w.Header().Set("Upgrade", "foo, websocket")
@@ -506,7 +547,6 @@ func TestDialExtraTokensInRespHeaders(t *testing.T) {
 }
 
 func TestHandshake(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -533,15 +573,12 @@ func TestHandshake(t *testing.T) {
 }
 
 func TestRespOnBadHandshake(t *testing.T) {
-	t.Parallel()
 	const expectedStatus = http.StatusGone
 	const expectedBody = "This is the response body."
 
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(expectedStatus)
-		if _, err := io.WriteString(w, expectedBody); err != nil {
-			t.Fatalf("WriteString: %v", err)
-		}
+		io.WriteString(w, expectedBody)
 	}))
 	defer s.Close()
 
@@ -574,12 +611,12 @@ type testLogWriter struct {
 }
 
 func (w testLogWriter) Write(p []byte) (int, error) {
+	w.t.Logf("%s", p)
 	return len(p), nil
 }
 
 // TestHost tests handling of host names and confirms that it matches net/http.
 func TestHost(t *testing.T) {
-	t.Parallel()
 
 	upgrader := Upgrader{}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -761,7 +798,6 @@ func TestHost(t *testing.T) {
 }
 
 func TestDialCompression(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -776,7 +812,6 @@ func TestDialCompression(t *testing.T) {
 }
 
 func TestSocksProxyDial(t *testing.T) {
-	t.Parallel()
 	s := newServer(t)
 	defer s.Close()
 
@@ -793,10 +828,7 @@ func TestSocksProxyDial(t *testing.T) {
 		}
 		defer c1.Close()
 
-		if err := c1.SetDeadline(time.Now().Add(30 * time.Second)); err != nil {
-			t.Errorf("set deadline failed: %v", err)
-			return
-		}
+		c1.SetDeadline(time.Now().Add(30 * time.Second))
 
 		buf := make([]byte, 32)
 		if _, err := io.ReadFull(c1, buf[:3]); err != nil {
@@ -835,15 +867,10 @@ func TestSocksProxyDial(t *testing.T) {
 		defer c2.Close()
 		done := make(chan struct{})
 		go func() {
-			if _, err := io.Copy(c1, c2); err != nil {
-				t.Errorf("copy failed: %v", err)
-			}
+			io.Copy(c1, c2)
 			close(done)
 		}()
-		if _, err := io.Copy(c2, c1); err != nil {
-			t.Errorf("copy failed: %v", err)
-			return
-		}
+		io.Copy(c2, c1)
 		<-done
 	}()
 
@@ -864,7 +891,6 @@ func TestSocksProxyDial(t *testing.T) {
 }
 
 func TestTracingDialWithContext(t *testing.T) {
-	t.Parallel()
 
 	var headersWrote, requestWrote, getConn, gotConn, connectDone, gotFirstResponseByte bool
 	trace := &httptrace.ClientTrace{
@@ -924,7 +950,6 @@ func TestTracingDialWithContext(t *testing.T) {
 }
 
 func TestEmptyTracingDialWithContext(t *testing.T) {
-	t.Parallel()
 
 	trace := &httptrace.ClientTrace{}
 	ctx := httptrace.WithClientTrace(context.Background(), trace)
@@ -946,7 +971,6 @@ func TestEmptyTracingDialWithContext(t *testing.T) {
 
 // TestNetDialConnect tests selection of dial method between NetDial, NetDialContext, NetDialTLS or NetDialTLSContext
 func TestNetDialConnect(t *testing.T) {
-	t.Parallel()
 
 	upgrader := Upgrader{}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1118,7 +1142,6 @@ func TestNetDialConnect(t *testing.T) {
 	}
 }
 func TestNextProtos(t *testing.T) {
-	t.Parallel()
 	ts := httptest.NewUnstartedServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
 	)
@@ -1151,5 +1174,68 @@ func TestNextProtos(t *testing.T) {
 	_, _, err = d.Dial(makeWsProto(ts.URL), nil)
 	if err == nil {
 		t.Fatalf("Dial succeeded, expect fail ")
+	}
+}
+
+type dataBeforeHandshakeResponseWriter struct {
+	http.ResponseWriter
+}
+
+type dataBeforeHandshakeConnection struct {
+	net.Conn
+	io.Reader
+}
+
+func (c *dataBeforeHandshakeConnection) Read(p []byte) (int, error) {
+	return c.Reader.Read(p)
+}
+
+func (w dataBeforeHandshakeResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	// Example single-frame masked text message from section 5.7 of the RFC.
+	message := []byte{0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51, 0x58}
+	n := len(message) / 2
+
+	c, rw, err := http.NewResponseController(w.ResponseWriter).Hijack()
+	if rw != nil {
+		// Load first part of message into bufio.Reader. If the websocket
+		// connection reads more than n bytes from the bufio.Reader, then the
+		// test will fail with an unexpected EOF error.
+		rw.Reader.Reset(bytes.NewReader(message[:n]))
+		rw.Reader.Peek(n)
+	}
+	if c != nil {
+		// Inject second part of message before data read from the network connection.
+		c = &dataBeforeHandshakeConnection{
+			Conn:   c,
+			Reader: io.MultiReader(bytes.NewReader(message[n:]), c),
+		}
+	}
+	return c, rw, err
+}
+
+func TestDataReceivedBeforeHandshake(t *testing.T) {
+	s := newServer(t)
+	defer s.Close()
+
+	origHandler := s.Server.Config.Handler
+	s.Server.Config.Handler = http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			origHandler.ServeHTTP(dataBeforeHandshakeResponseWriter{w}, r)
+		})
+
+	for _, readBufferSize := range []int{0, 1024} {
+		t.Run(fmt.Sprintf("ReadBufferSize=%d", readBufferSize), func(t *testing.T) {
+			dialer := cstDialer
+			dialer.ReadBufferSize = readBufferSize
+			ws, _, err := cstDialer.Dial(s.URL, nil)
+			if err != nil {
+				t.Fatalf("Dial: %v", err)
+			}
+			defer ws.Close()
+			_, m, err := ws.ReadMessage()
+			if err != nil || string(m) != "Hello" {
+				t.Fatalf("ReadMessage() = %q, %v, want \"Hello\", nil", m, err)
+			}
+		})
 	}
 }

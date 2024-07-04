@@ -18,7 +18,6 @@ _This project is a fork of the latest version of [gorilla/websocket](https://git
 * [Command example](_examples/command)
 * [Client and server example](_examples/echo)
 * [File watch example](_examples/filewatch)
-* [Write buffer pool example](_examples/bufferpool)
 
 ### Status
 

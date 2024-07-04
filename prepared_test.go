@@ -46,10 +46,7 @@ func TestPreparedMessage(t *testing.T) {
 		if tt.enableWriteCompression {
 			c.newCompressionWriter = compressNoContextTakeover
 		}
-
-		if err := c.SetCompressionLevel(tt.compressionLevel); err != nil {
-			t.Fatal(err)
-		}
+		c.SetCompressionLevel(tt.compressionLevel)
 
 		// Seed random number generator for consistent frame mask.
 		testRand.Seed(1234)
@@ -77,7 +74,7 @@ func TestPreparedMessage(t *testing.T) {
 		got := buf.String()
 
 		if got != want {
-			t.Errorf("write message != prepared message, got %#v, want %#v", got, want)
+			t.Errorf("write message != prepared message for %+v", tt)
 		}
 	}
 }

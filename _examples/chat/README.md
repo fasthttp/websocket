@@ -35,7 +35,7 @@ client's goroutines reads messages from this channel and writes the messages to
 the websocket. The other client goroutine reads messages from the websocket and
 sends them to the hub.
 
-### Hub 
+### Hub
 
 The code for the `Hub` type is in
 [hub.go](https://github.com/fasthttp/websocket/blob/master/examples/chat/hub.go).
