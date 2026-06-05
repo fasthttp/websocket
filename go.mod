@@ -1,17 +1,17 @@
 module github.com/fasthttp/websocket
 
-go 1.21
+go 1.25.0
 
-toolchain go1.23.4
+toolchain go1.26.1
 
 require (
-	github.com/klauspost/compress v1.17.11
-	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38
-	github.com/valyala/fasthttp v1.58.0
-	golang.org/x/net v0.33.0
+	github.com/klauspost/compress v1.18.6
+	github.com/savsgio/gotils v0.0.0-20250924091648-bce9a52d7761
+	github.com/valyala/fasthttp v1.71.0
+	golang.org/x/net v0.55.0
 )
 
 require (
-	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/andybalholm/brotli v1.2.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 )
